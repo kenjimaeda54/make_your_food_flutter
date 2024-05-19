@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -9,22 +10,42 @@ import 'package:make_your_food/screens/home/widget/show_gallery_camera.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class HomeScreen extends HookWidget {
-  const HomeScreen({super.key});
+  late CameraController _cameraController;
+  final apiKey = dotenv.env[environmentApiKey];
+  final _imagePicker = ImagePicker();
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = dotenv.env[environmentApiKey];
+    //deixar todas variaveis possiveis fora do metodo build, so os hooks, exempo cameraController aqui sera sera rebuildado
+    //dando nullo no final
     final focusTextMessage = useFocusNode();
-    final imagePicker = ImagePicker();
     var imagesGallery = useState<List<XFile>>([]);
+    var cameras = useState<List<CameraDescription>>([]);
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
         if (imagesGallery.value.isEmpty) {
-          imagesGallery.value = await imagePicker.pickMultiImage();
+          imagesGallery.value = await _imagePicker.pickMultiImage();
         }
       });
     }, const []);
+
+    useEffect(() {
+      Future.delayed(Duration.zero, () async {
+        try {
+          cameras.value = await availableCameras();
+          if (cameras.value.isNotEmpty) {
+            _cameraController = CameraController(
+                cameras.value.last, ResolutionPreset.high,
+                enableAudio: false);
+            await _cameraController.initialize();
+          }
+        } catch (e) {
+          print(e);
+        }
+      });
+    }, [cameras]);
 
     return GestureDetector(
       onTap: () => focusTextMessage.unfocus(),
@@ -57,6 +78,8 @@ class HomeScreen extends HookWidget {
                                   builder: (context) {
                                     return ShowGalleryCamera(
                                       imagesGallery: imagesGallery.value,
+                                      cameras: cameras.value,
+                                      cameraController: _cameraController,
                                     );
                                   });
                             },

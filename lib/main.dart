@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:make_your_food/screens/home/home.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   runApp(MainApp());
 }
@@ -22,6 +23,6 @@ class MainApp extends StatelessWidget {
               primary: const Color(0xFFEEEEEE),
               secondary: const Color(0xff0C0C0C),
             )),
-        home: const HomeScreen());
+        home: HomeScreen());
   }
 }
