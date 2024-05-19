@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:make_your_food/constants/constants_environment.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:make_your_food/screens/home/widget/show_gallery_camera.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class HomeScreen extends HookWidget {
   const HomeScreen({super.key});
@@ -13,6 +15,16 @@ class HomeScreen extends HookWidget {
   Widget build(BuildContext context) {
     final apiKey = dotenv.env[environmentApiKey];
     final focusTextMessage = useFocusNode();
+    final imagePicker = ImagePicker();
+    var imagesGallery = useState<List<XFile>>([]);
+
+    useEffect(() {
+      Future.delayed(Duration.zero, () async {
+        if (imagesGallery.value.isEmpty) {
+          imagesGallery.value = await imagePicker.pickMultiImage();
+        }
+      });
+    }, const []);
 
     return GestureDetector(
       onTap: () => focusTextMessage.unfocus(),
@@ -37,20 +49,29 @@ class HomeScreen extends HookWidget {
                         children: [
                           InkWell(
                             onTap: () {
-                              showModalBottomSheet<void>(
+                              showCupertinoModalBottomSheet<void>(
+                                  backgroundColor: Colors.white,
+                                  elevation: 0,
                                   context: context,
                                   enableDrag: true,
-                                  isScrollControlled: true,
                                   builder: (context) {
-                                    return const ShowGalleryCamera();
+                                    return ShowGalleryCamera(
+                                      imagesGallery: imagesGallery.value,
+                                    );
                                   });
                             },
-                            child: Image.asset(
-                              "assets/images/clip.png",
-                              width: 25,
-                              height: 25,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
+                            child: imagesGallery.value.isNotEmpty
+                                ? Image.asset(
+                                    "assets/images/clip.png",
+                                    width: 25,
+                                    height: 25,
+                                    color:
+                                        Theme.of(context).colorScheme.secondary,
+                                  )
+                                : const SizedBox(
+                                    width: 25,
+                                    height: 25,
+                                  ),
                           ),
                           SizedBox(
                             width: MediaQuery.of(context).size.width * 0.8,
