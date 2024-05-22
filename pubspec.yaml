@@ -1,4 +1,4 @@
-name: make_your_food
+name: make_your_travel
 description: "A new Flutter project."
 publish_to: "none"
 version: 0.1.0
@@ -14,10 +14,11 @@ dependencies:
   freezed: ^2.4.2
   flutter_dotenv: ^5.1.0
   flutter_gemini: ^2.0.3
-  image_picker: ^1.1.1
   modal_bottom_sheet: ^3.0.0
   camera: ^0.11.0
   open_settings_plus: ^0.3.3
+  photo_manager: ^3.1.1
+  photo_manager_image_provider: ^2.1.1
 
 dev_dependencies:
   flutter_test:

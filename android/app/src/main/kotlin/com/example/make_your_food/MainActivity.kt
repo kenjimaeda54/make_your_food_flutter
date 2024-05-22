@@ -1,4 +1,4 @@
-package com.example.make_your_food
+package com.example.make_your_travel
 
 import io.flutter.embedding.android.FlutterActivity
 

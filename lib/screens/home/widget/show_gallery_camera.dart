@@ -1,14 +1,14 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:open_settings_plus/core/open_settings_plus.dart';
 import 'package:open_settings_plus/open_settings_plus.dart';
+import 'package:photo_manager/photo_manager.dart';
+import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
 class ShowGalleryCamera extends HookWidget {
-  final List<XFile> imagesGallery;
+  final List<AssetEntity> imagesGallery;
   final List<CameraDescription> cameras;
   final CameraController cameraController;
   const ShowGalleryCamera(
@@ -20,7 +20,7 @@ class ShowGalleryCamera extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
-        physics: const ScrollPhysics(parent: BouncingScrollPhysics()),
+        physics: const ScrollPhysics(parent: ScrollPhysics()),
         shrinkWrap: true,
         itemCount: imagesGallery.length,
         gridDelegate:
@@ -66,9 +66,11 @@ class ShowGalleryCamera extends HookWidget {
                     ),
             );
           }
-          return Image.file(
-            File(imagesGallery[index].path),
+          return AssetEntityImage(
+            imagesGallery[index],
+            thumbnailSize: const ThumbnailSize.square(200),
             fit: BoxFit.cover,
+            filterQuality: FilterQuality.high,
           );
         }));
   }

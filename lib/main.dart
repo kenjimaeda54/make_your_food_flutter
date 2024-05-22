@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:make_your_food/screens/home/home.dart';
+import 'package:make_your_travel/constants/constants_environment.dart';
+import 'package:make_your_travel/screens/home/home.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  final apiKey = dotenv.env[environmentApiKey];
+  Gemini.init(apiKey: apiKey!);
+
   runApp(MainApp());
 }
 
