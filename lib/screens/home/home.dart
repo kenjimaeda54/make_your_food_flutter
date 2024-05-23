@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
@@ -8,15 +7,20 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:make_your_travel/constants/constants_environment.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:make_your_travel/screens/home/widget/row_messages.dart';
 import 'package:make_your_travel/screens/home/widget/show_gallery_camera.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:uuid/uuid.dart';
 
-typedef Messages = ({String sendMessages, String receiveMessages});
+typedef Messages = ({
+  String sendMessages,
+  String receiveMessages,
+  String id,
+  bool isLoadingResponse
+});
 
+//Usar o Geolocator
 class HomeScreen extends HookWidget {
   late CameraController _cameraController;
   final _gemini = Gemini.instance;
@@ -33,6 +37,7 @@ class HomeScreen extends HookWidget {
     final messages = useState<List<Messages>>([]);
     final useControllerMessage = useTextEditingController();
     final useControllerScrollMessage = useScrollController();
+    final isLoadingResponseGemini = useState(false);
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
@@ -99,15 +104,18 @@ class HomeScreen extends HookWidget {
                     Expanded(
                         flex: 1,
                         child: ListView.builder(
-                            padding: EdgeInsets.all(0),
+                            padding: const EdgeInsets.all(0),
                             reverse: true,
                             controller: useControllerScrollMessage,
                             itemCount: messages.value.length,
                             itemBuilder: (context, index) => RowMessages(
-                                receiveMessages:
-                                    messages.value[index].receiveMessages,
-                                sendMessages:
-                                    messages.value[index].sendMessages))),
+                                  receiveMessages:
+                                      messages.value[index].receiveMessages,
+                                  sendMessages:
+                                      messages.value[index].sendMessages,
+                                  isLoadingResponse:
+                                      messages.value[index].isLoadingResponse,
+                                ))),
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
@@ -160,6 +168,7 @@ class HomeScreen extends HookWidget {
                               SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.75,
                                 child: TextField(
+                                  enabled: !isLoadingResponseGemini.value,
                                   onChanged: (value) =>
                                       userMessage.value = value,
                                   focusNode: focusTextMessage,
@@ -195,30 +204,67 @@ class HomeScreen extends HookWidget {
                               ),
                               userMessage.value.isNotEmpty
                                   ? InkWell(
-                                      onTap: () async {
-                                        final responseModel = await _gemini
-                                            .text(userMessage.value);
-                                        if (responseModel != null) {
-                                          final Messages currentMessage = (
-                                            receiveMessages: userMessage.value,
-                                            sendMessages: responseModel.content
-                                                    ?.parts?.last.text ??
-                                                ""
-                                          );
-                                          messages.value = [
-                                            currentMessage,
-                                            ...messages.value
-                                          ];
-                                          userMessage.value = "";
-                                          useControllerMessage.text = "";
-                                          useControllerScrollMessage.animateTo(
-                                              useControllerScrollMessage
-                                                  .position.minScrollExtent,
-                                              duration:
-                                                  const Duration(seconds: 2),
-                                              curve: Curves.fastOutSlowIn);
-                                        }
-                                      },
+                                      onTap: isLoadingResponseGemini.value
+                                          ? null
+                                          : () async {
+                                              isLoadingResponseGemini.value =
+                                                  true;
+                                              final id = Uuid().v4();
+
+                                              final Messages currentMessage = (
+                                                receiveMessages: "",
+                                                sendMessages: userMessage.value,
+                                                id: id,
+                                                isLoadingResponse: true
+                                              );
+                                              messages.value = [
+                                                currentMessage,
+                                                ...messages.value
+                                              ];
+                                              final responseModel =
+                                                  await _gemini
+                                                      .text(userMessage.value);
+
+                                              userMessage.value = "";
+                                              useControllerMessage.text = "";
+
+                                              if (responseModel != null) {
+                                                messages.value =
+                                                    messages.value.map((it) {
+                                                  if (it.id == id) {
+                                                    final Messages
+                                                        currentMessage = (
+                                                      receiveMessages:
+                                                          responseModel
+                                                                  .content
+                                                                  ?.parts
+                                                                  ?.last
+                                                                  .text ??
+                                                              "",
+                                                      sendMessages:
+                                                          it.sendMessages,
+                                                      id: it.id,
+                                                      isLoadingResponse: false
+                                                    );
+                                                    return currentMessage;
+                                                  }
+                                                  return it;
+                                                }).toList();
+
+                                                useControllerScrollMessage
+                                                    .animateTo(
+                                                        useControllerScrollMessage
+                                                            .position
+                                                            .minScrollExtent,
+                                                        duration:
+                                                            const Duration(
+                                                                seconds: 2),
+                                                        curve: Curves
+                                                            .fastOutSlowIn);
+                                                isLoadingResponseGemini.value =
+                                                    false;
+                                              }
+                                            },
                                       child: Image.asset(
                                         "assets/images/send_message.png",
                                         width: 30,

@@ -19,6 +19,8 @@ dependencies:
   open_settings_plus: ^0.3.3
   photo_manager: ^3.1.1
   photo_manager_image_provider: ^2.1.1
+  rive: ^0.13.4
+  uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:
@@ -30,6 +32,7 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/rive/gemini_rive.riv
   fonts:
     - family: Ubuntu
       fonts:
