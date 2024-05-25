@@ -1,19 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:make_your_travel/models/messages/messages.dart';
 import 'package:rive/rive.dart';
 
 class RowMessages extends HookWidget {
-  final String sendMessages;
-  final String receiveMessages;
-  final bool isLoadingResponse;
-  const RowMessages(
-      {super.key,
-      required this.receiveMessages,
-      required this.sendMessages,
-      required this.isLoadingResponse});
+  final Message messages;
+  const RowMessages({super.key, required this.messages});
 
   @override
   Widget build(BuildContext context) {
@@ -22,47 +20,107 @@ class RowMessages extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _handleContainerMessages(
-              context, sendMessages, true, isLoadingResponse),
-          _handleContainerMessages(
-              context, receiveMessages, false, isLoadingResponse),
+          _handleContainerMessages(context, messages.sendMessages, true,
+              messages.isLoadingResponse, messages.file),
+          _handleContainerMessages(context, messages.receiveMessages, false,
+              messages.isLoadingResponse, messages.file)
         ],
       ),
     );
   }
 }
 
-Widget _handleContainerMessages(
-    BuildContext context, String message, bool isUser, bool isLoadingResponse) {
+Widget _handleContainerMessages(BuildContext context, String message,
+    bool isUser, bool isLoadingResponse, File? file) {
+  Widget widgetMessage() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 13,
+            vertical: 7,
+          ),
+          decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary,
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(3),
+                  bottomRight: Radius.circular(20))),
+          child: Text(
+            message,
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w300,
+                fontSize: 15),
+          ),
+        ),
+      ),
+    );
+  }
+
   final Widget returnResponseTypeView = GeminiResponseTypeView(
     builder: (context, child, response, loading) {
       if (response != null || !isLoadingResponse || isUser) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 13,
-                vertical: 7,
-              ),
-              decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                      bottomLeft: Radius.circular(3),
-                      bottomRight: Radius.circular(20))),
-              child: Text(
-                message,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w300,
-                    fontSize: 15),
-              ),
-            ),
-          ),
-        );
+        return file == null
+            ? widgetMessage()
+            : isUser
+                ? Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 3, vertical: 5),
+                      decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary,
+                          borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(1),
+                              bottomRight: Radius.circular(20))),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              File(file.path),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: 300,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 7,
+                            ),
+                            child: Text(
+                              message,
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : message.isEmpty
+                    ? SizedBox(
+                        height: 30,
+                        width: 100,
+                        child: RiveAnimation.asset(
+                          "assets/rive/gemini_rive.riv",
+                          artboard: "Write Loading",
+                          fit: BoxFit.fitWidth,
+                          controllers: [OneShotAnimation("Loop")],
+                          stateMachines: ['State'],
+                        ),
+                      )
+                    : widgetMessage();
       }
       return Align(
         alignment: Alignment.topLeft,

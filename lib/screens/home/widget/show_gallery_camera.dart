@@ -2,12 +2,15 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:make_your_travel/providers/image_hero_animation.dart';
+import 'package:make_your_travel/screens/details_image_or_camera/details_image.dart';
 import 'package:open_settings_plus/core/open_settings_plus.dart';
 import 'package:open_settings_plus/open_settings_plus.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
-class ShowGalleryCamera extends HookWidget {
+class ShowGalleryCamera extends HookConsumerWidget {
   final List<AssetEntity> imagesGallery;
   final List<CameraDescription> cameras;
   final CameraController cameraController;
@@ -18,7 +21,7 @@ class ShowGalleryCamera extends HookWidget {
       required this.cameraController});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GridView.builder(
         physics: const ScrollPhysics(parent: ScrollPhysics()),
         shrinkWrap: true,
@@ -66,11 +69,22 @@ class ShowGalleryCamera extends HookWidget {
                     ),
             );
           }
-          return AssetEntityImage(
-            imagesGallery[index],
-            thumbnailSize: const ThumbnailSize.square(200),
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.high,
+          return GestureDetector(
+            onTap: () => {
+              ref.read(imageHeroAnimation.notifier).state =
+                  imagesGallery[index].id,
+              Navigator.of(context)
+                  .push(DetailsImage.route(image: imagesGallery[index]))
+            },
+            child: Hero(
+              tag: imagesGallery[index].id,
+              child: AssetEntityImage(
+                imagesGallery[index],
+                thumbnailSize: const ThumbnailSize.square(200),
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+              ),
+            ),
           );
         }));
   }

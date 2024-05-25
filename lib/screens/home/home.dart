@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
@@ -7,34 +8,39 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:make_your_travel/models/messages/messages.dart';
+import 'package:make_your_travel/models/messages/messages_model.dart';
+import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/screens/home/widget/row_messages.dart';
 import 'package:make_your_travel/screens/home/widget/show_gallery_camera.dart';
+import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:uuid/uuid.dart';
 
-typedef Messages = ({
-  String sendMessages,
-  String receiveMessages,
-  String id,
-  bool isLoadingResponse
-});
-
+//https://labelbox.com/blog/how-to-leverage-googles-gemini-models-in-foundry-for-building-ai/
+//https://ai.google.dev/examples?hl=pt-br
 //Usar o Geolocator
-class HomeScreen extends HookWidget {
+class HomeScreen extends HookConsumerWidget {
   late CameraController _cameraController;
   final _gemini = Gemini.instance;
   HomeScreen({super.key});
 
+  static Route route() {
+    return MaterialPageRoute(builder: (_) => HomeScreen());
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     //deixar todas variaveis possiveis fora do metodo build, so os hooks, exempo cameraController aqui sera sera rebuildado
     //dando nullo no final
     final focusTextMessage = useFocusNode();
     var imagesGallery = useState<List<AssetEntity>>([]);
     var cameras = useState<List<CameraDescription>>([]);
     final userMessage = useState("");
-    final messages = useState<List<Messages>>([]);
+    final List<Message> messages =
+        ref.watch(messagesProvider); //essa sera todas nossas mensagens
     final useControllerMessage = useTextEditingController();
     final useControllerScrollMessage = useScrollController();
     final isLoadingResponseGemini = useState(false);
@@ -71,6 +77,7 @@ class HomeScreen extends HookWidget {
       Future.delayed(Duration.zero, () async {
         try {
           cameras.value = await availableCameras();
+
           if (cameras.value.isNotEmpty) {
             _cameraController = CameraController(
                 cameras.value.last, ResolutionPreset.high,
@@ -104,18 +111,22 @@ class HomeScreen extends HookWidget {
                     Expanded(
                         flex: 1,
                         child: ListView.builder(
-                            padding: const EdgeInsets.all(0),
-                            reverse: true,
-                            controller: useControllerScrollMessage,
-                            itemCount: messages.value.length,
-                            itemBuilder: (context, index) => RowMessages(
-                                  receiveMessages:
-                                      messages.value[index].receiveMessages,
-                                  sendMessages:
-                                      messages.value[index].sendMessages,
-                                  isLoadingResponse:
-                                      messages.value[index].isLoadingResponse,
-                                ))),
+                          padding: const EdgeInsets.all(0),
+                          reverse: true,
+                          controller: useControllerScrollMessage,
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) =>
+                              messages[index].heroAnimation != null
+                                  ? Hero(
+                                      tag: messages[index].heroAnimation!,
+                                      child: RowMessages(
+                                        messages: messages[index],
+                                      ),
+                                    )
+                                  : RowMessages(
+                                      messages: messages[index],
+                                    ),
+                        )),
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
@@ -165,111 +176,132 @@ class HomeScreen extends HookWidget {
                                         height: 25,
                                       ),
                               ),
-                              SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.75,
-                                child: TextField(
-                                  enabled: !isLoadingResponseGemini.value,
-                                  onChanged: (value) =>
-                                      userMessage.value = value,
-                                  focusNode: focusTextMessage,
-                                  controller: useControllerMessage,
-                                  // textInputAction: TextInputAction.done, //quando desejo que seja done
-                                  maxLines: null,
-                                  cursorColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 17),
-                                  decoration: InputDecoration(
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 10, horizontal: 20),
-                                      hintText: "Message",
-                                      hintStyle: TextStyle(
-                                          color: Theme.of(context)
-                                              .primaryColor
-                                              .withOpacity(0.3),
-                                          fontWeight: FontWeight.w300,
-                                          fontSize: 17),
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(40)),
-                                      filled: true,
-                                      fillColor: Theme.of(context)
-                                          .colorScheme
-                                          .secondary),
-                                ),
+                              CommonTextField(
+                                enabled: !isLoadingResponseGemini.value,
+                                onChanged: (value) => userMessage.value = value,
+                                focusNode: focusTextMessage,
+                                controller: useControllerMessage,
                               ),
-                              userMessage.value.isNotEmpty
+                              userMessage.value.isNotEmpty ||
+                                      isLoadingResponseGemini.value
                                   ? InkWell(
                                       onTap: isLoadingResponseGemini.value
                                           ? null
                                           : () async {
-                                              isLoadingResponseGemini.value =
-                                                  true;
                                               final id = Uuid().v4();
+                                              try {
+                                                isLoadingResponseGemini.value =
+                                                    true;
+                                                focusTextMessage.requestFocus();
+                                                final Message currentMessage =
+                                                    Message(
+                                                        sendMessages:
+                                                            userMessage.value,
+                                                        receiveMessages: "",
+                                                        id: id,
+                                                        isLoadingResponse:
+                                                            true);
 
-                                              final Messages currentMessage = (
-                                                receiveMessages: "",
-                                                sendMessages: userMessage.value,
-                                                id: id,
-                                                isLoadingResponse: true
-                                              );
-                                              messages.value = [
-                                                currentMessage,
-                                                ...messages.value
-                                              ];
-                                              final responseModel =
-                                                  await _gemini
-                                                      .text(userMessage.value);
+                                                //automaticamente quando adiciono uma reflete a nossa variavel messages qeu esta com ref.watch(messagesModelProvider)
+                                                ref
+                                                    .read(messagesProvider
+                                                        .notifier)
+                                                    .addMessage(currentMessage);
 
-                                              userMessage.value = "";
-                                              useControllerMessage.text = "";
+                                                final responseModel =
+                                                    await _gemini.text(
+                                                        userMessage.value,
+                                                        safetySettings: [
+                                                      SafetySetting(
+                                                          category:
+                                                              SafetyCategory
+                                                                  .dangerous,
+                                                          threshold: SafetyThreshold
+                                                              .blockLowAndAbove),
+                                                      SafetySetting(
+                                                          category: SafetyCategory
+                                                              .sexuallyExplicit,
+                                                          threshold: SafetyThreshold
+                                                              .blockLowAndAbove),
+                                                      SafetySetting(
+                                                          category:
+                                                              SafetyCategory
+                                                                  .harassment,
+                                                          threshold: SafetyThreshold
+                                                              .blockLowAndAbove),
+                                                    ]);
 
-                                              if (responseModel != null) {
-                                                messages.value =
-                                                    messages.value.map((it) {
-                                                  if (it.id == id) {
-                                                    final Messages
-                                                        currentMessage = (
-                                                      receiveMessages:
-                                                          responseModel
-                                                                  .content
-                                                                  ?.parts
-                                                                  ?.last
-                                                                  .text ??
-                                                              "",
-                                                      sendMessages:
-                                                          it.sendMessages,
-                                                      id: it.id,
-                                                      isLoadingResponse: false
-                                                    );
-                                                    return currentMessage;
-                                                  }
-                                                  return it;
-                                                }).toList();
+                                                if (responseModel != null) {
+                                                  final Message newMessage =
+                                                      Message(
+                                                    sendMessages:
+                                                        userMessage.value,
+                                                    receiveMessages:
+                                                        responseModel
+                                                                .content
+                                                                ?.parts
+                                                                ?.last
+                                                                .text ??
+                                                            "",
+                                                    id: id,
+                                                    isLoadingResponse: false,
+                                                  );
+                                                  ref
+                                                      .read(messagesProvider
+                                                          .notifier)
+                                                      .updateMessage(
+                                                          newMessage);
 
-                                                useControllerScrollMessage
-                                                    .animateTo(
-                                                        useControllerScrollMessage
-                                                            .position
-                                                            .minScrollExtent,
-                                                        duration:
-                                                            const Duration(
-                                                                seconds: 2),
-                                                        curve: Curves
-                                                            .fastOutSlowIn);
+                                                  userMessage.value = "";
+                                                  useControllerMessage.text =
+                                                      "";
+
+                                                  useControllerScrollMessage
+                                                      .animateTo(
+                                                          useControllerScrollMessage
+                                                              .position
+                                                              .minScrollExtent,
+                                                          duration:
+                                                              const Duration(
+                                                                  seconds: 2),
+                                                          curve: Curves
+                                                              .fastOutSlowIn);
+                                                  isLoadingResponseGemini
+                                                      .value = false;
+                                                }
+                                              } catch (e) {
+                                                print(e);
                                                 isLoadingResponseGemini.value =
                                                     false;
+                                                final Message newMessage =
+                                                    Message(
+                                                  sendMessages:
+                                                      userMessage.value,
+                                                  receiveMessages:
+                                                      "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
+                                                  id: id,
+                                                  isLoadingResponse: false,
+                                                );
+
+                                                ref
+                                                    .read(messagesProvider
+                                                        .notifier)
+                                                    .updateMessage(newMessage);
+
+                                                userMessage.value = "";
+                                                useControllerMessage.text = "";
                                               }
                                             },
-                                      child: Image.asset(
-                                        "assets/images/send_message.png",
-                                        width: 30,
-                                        height: 30,
-                                      ),
+                                      child: isLoadingResponseGemini.value
+                                          ? const SizedBox(
+                                              width: 30,
+                                              height: 30,
+                                            )
+                                          : Image.asset(
+                                              "assets/images/send_message.png",
+                                              width: 30,
+                                              height: 30,
+                                            ),
                                     )
                                   : Image.asset(
                                       "assets/images/microphone.png",
