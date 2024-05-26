@@ -7,19 +7,18 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   await dotenv.load(fileName: ".env");
   final apiKey = dotenv.env[environmentApiKey];
   Gemini.init(apiKey: apiKey!);
+  WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(ProviderScope(
+  runApp(const ProviderScope(
     child: MainApp(),
   ));
 }
 
 class MainApp extends StatelessWidget {
-  MainApp({super.key});
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {

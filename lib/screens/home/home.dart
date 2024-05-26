@@ -108,6 +108,8 @@ class HomeScreen extends HookConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    //depois tentar implementar o Sliver para melhorar a performance dessa lista
+                    //ou susar o superlist
                     Expanded(
                         flex: 1,
                         child: ListView.builder(

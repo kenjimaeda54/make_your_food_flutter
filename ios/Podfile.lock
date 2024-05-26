@@ -2,6 +2,13 @@ PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - image_cropper (0.0.4):
+    - Flutter
+    - TOCropViewController (~> 2.7.3)
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - native_image_cropper_ios (0.1.0):
+    - Flutter
   - open_settings_plus (0.0.1):
     - Flutter
   - photo_manager (2.0.0):
@@ -9,19 +16,33 @@ PODS:
     - FlutterMacOS
   - rive_common (0.0.1):
     - Flutter
+  - TOCropViewController (2.7.4)
 
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
   - Flutter (from `Flutter`)
+  - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - native_image_cropper_ios (from `.symlinks/plugins/native_image_cropper_ios/ios`)
   - open_settings_plus (from `.symlinks/plugins/open_settings_plus/ios`)
   - photo_manager (from `.symlinks/plugins/photo_manager/ios`)
   - rive_common (from `.symlinks/plugins/rive_common/ios`)
+
+SPEC REPOS:
+  trunk:
+    - TOCropViewController
 
 EXTERNAL SOURCES:
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
   Flutter:
     :path: Flutter
+  image_cropper:
+    :path: ".symlinks/plugins/image_cropper/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  native_image_cropper_ios:
+    :path: ".symlinks/plugins/native_image_cropper_ios/ios"
   open_settings_plus:
     :path: ".symlinks/plugins/open_settings_plus/ios"
   photo_manager:
@@ -32,9 +53,13 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   camera_avfoundation: 759172d1a77ae7be0de08fc104cfb79738b8a59e
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  image_cropper: 2c150b3d63f4feaad31054d20381ddac0a460e63
+  image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
+  native_image_cropper_ios: 63e0da0508f819ddf391a70e33c11f43d60e8182
   open_settings_plus: 4bd848866fea2becc124581d868a6164cf768831
   photo_manager: ff695c7a1dd5bc379974953a2b5c0a293f7c4c8a
   rive_common: cbbac3192af00d7341f19dae2f26298e9e37d99e
+  TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
 
 PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
 
