@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -17,12 +19,12 @@ import 'package:uuid/uuid.dart';
 //hero animation
 //https://api.flutter.dev/flutter/widgets/Hero-class.html
 class DetailsImage extends HookConsumerWidget {
-  final AssetEntity image;
+  final File image;
   final _gemini = Gemini.instance;
 
   DetailsImage({super.key, required this.image});
 
-  static Route route({required AssetEntity image}) {
+  static Route route({required File image}) {
     return MaterialWithModalsPageRoute(
       builder: (_) => DetailsImage(image: image),
     );
@@ -51,15 +53,14 @@ class DetailsImage extends HookConsumerWidget {
             Hero(
               tag: ref.read(imageHeroAnimation),
               child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: AssetEntityImage(
-                  image,
-                  thumbnailSize: const ThumbnailSize.square(200),
-                  fit: BoxFit.fill,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image(
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    image: ResizeImage(FileImage(image),
+                        width: 1000, height: 1000),
+                  )),
             ),
             Padding(
               padding: EdgeInsets.only(
@@ -79,15 +80,12 @@ class DetailsImage extends HookConsumerWidget {
                       onTap: () async {
                         final id = Uuid().v4();
                         try {
-                          final file = await image.file;
-
-                          if (file == null) return;
                           final Message newMessage = Message(
                               sendMessages: userMessage.value,
                               receiveMessages: "",
                               id: id,
                               isLoadingResponse: true,
-                              file: file,
+                              file: image,
                               heroAnimation: ref.read(imageHeroAnimation));
                           ref
                               .read(messagesProvider.notifier)
@@ -98,7 +96,7 @@ class DetailsImage extends HookConsumerWidget {
                           }
 
                           final responseModel = await _gemini.textAndImage(
-                              images: [file.readAsBytesSync()],
+                              images: [image.readAsBytesSync()],
                               text: userMessage.value,
                               safetySettings: [
                                 SafetySetting(
@@ -123,7 +121,7 @@ class DetailsImage extends HookConsumerWidget {
                                         "",
                                 id: id,
                                 isLoadingResponse: false,
-                                file: file,
+                                file: image,
                                 heroAnimation: ref.read(imageHeroAnimation));
                             ref
                                 .read(messagesProvider.notifier)

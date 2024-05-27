@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:make_your_travel/constants/constants_environment.dart';
 import 'package:make_your_travel/screens/home/home.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -33,7 +32,6 @@ class MainApp extends StatelessWidget {
             secondary: const Color(0xff0C0C0C),
           )),
       home: HomeScreen(),
-      builder: EasyLoading.init(),
     );
   }
 }

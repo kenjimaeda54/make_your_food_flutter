@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -11,12 +12,12 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/models/messages/messages.dart';
 import 'package:make_your_travel/models/messages/messages_model.dart';
-import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/screens/home/widget/row_messages.dart';
 import 'package:make_your_travel/screens/home/widget/show_gallery_camera.dart';
 import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:uuid/uuid.dart';
 
 //https://labelbox.com/blog/how-to-leverage-googles-gemini-models-in-foundry-for-building-ai/
@@ -24,6 +25,7 @@ import 'package:uuid/uuid.dart';
 //Usar o Geolocator
 class HomeScreen extends HookConsumerWidget {
   late CameraController _cameraController;
+  final _listController = ListController();
   final _gemini = Gemini.instance;
   HomeScreen({super.key});
 
@@ -36,7 +38,7 @@ class HomeScreen extends HookConsumerWidget {
     //deixar todas variaveis possiveis fora do metodo build, so os hooks, exempo cameraController aqui sera sera rebuildado
     //dando nullo no final
     final focusTextMessage = useFocusNode();
-    var imagesGallery = useState<List<AssetEntity>>([]);
+    var imagesGallery = useState<List<File>>([]);
     var cameras = useState<List<CameraDescription>>([]);
     final userMessage = useState("");
     final List<Message> messages =
@@ -44,26 +46,38 @@ class HomeScreen extends HookConsumerWidget {
     final useControllerMessage = useTextEditingController();
     final useControllerScrollMessage = useScrollController();
     final isLoadingResponseGemini = useState(false);
+    final isLoadingAssets = useState(true);
+
+    Future<bool> handleProcessPhoto() async {
+      final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
+          type: RequestType.image,
+          filterOption: FilterOptionGroup(
+              imageOption: const FilterOption(
+                  needTitle: false,
+                  sizeConstraint: SizeConstraint(ignoreSize: true))));
+      for (var it in paths) {
+        final countAssets = await it.assetCountAsync;
+        if (countAssets < 1) return false;
+        final listAssets =
+            await it.getAssetListRange(start: 0, end: countAssets);
+
+        for (var asset in listAssets) {
+          final imageFile = await asset.file ?? File("");
+          if (!imagesGallery.value.contains(imageFile)) {
+            //transformar em uma classe que retorna
+            imagesGallery.value = [...imagesGallery.value, imageFile];
+          }
+        }
+      }
+      return false;
+    }
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
         final permissionPhoto = await PhotoManager.requestPermissionExtend();
         if (permissionPhoto.isAuth) {
-          final List<AssetPathEntity> paths =
-              await PhotoManager.getAssetPathList(
-            type: RequestType.image,
-          );
-
-          for (var it in paths) {
-            final countAssets = await it.assetCountAsync;
-            final listAssets =
-                await it.getAssetListRange(start: 0, end: countAssets);
-
-            for (var asset in listAssets) {
-              if (!imagesGallery.value.contains(asset)) {
-                imagesGallery.value = [...imagesGallery.value, asset];
-              }
-            }
+          if (imagesGallery.value.isEmpty) {
+            isLoadingAssets.value = await handleProcessPhoto();
           }
         }
 
@@ -109,13 +123,14 @@ class HomeScreen extends HookConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     //depois tentar implementar o Sliver para melhorar a performance dessa lista
-                    //ou susar o superlist
+                    //tentar implementar o super_sliver_list
                     Expanded(
                         flex: 1,
-                        child: ListView.builder(
+                        child: SuperListView.builder(
                           padding: const EdgeInsets.all(0),
                           reverse: true,
                           controller: useControllerScrollMessage,
+                          listController: _listController,
                           itemCount: messages.length,
                           itemBuilder: (context, index) =>
                               messages[index].heroAnimation != null
@@ -164,7 +179,8 @@ class HomeScreen extends HookConsumerWidget {
                                         );
                                       });
                                 },
-                                child: imagesGallery.value.isNotEmpty
+                                child: imagesGallery.value.isNotEmpty &&
+                                        !isLoadingAssets.value
                                     ? Image.asset(
                                         "assets/images/clip.png",
                                         width: 25,
@@ -254,20 +270,20 @@ class HomeScreen extends HookConsumerWidget {
                                                       .updateMessage(
                                                           newMessage);
 
+                                                  _listController.animateToItem(
+                                                    index: messages.length - 1,
+                                                    scrollController:
+                                                        useControllerScrollMessage,
+                                                    alignment: 0.3,
+                                                    duration: (_) =>
+                                                        const Duration(
+                                                            milliseconds: 250),
+                                                    curve: (_) =>
+                                                        Curves.easeInOut,
+                                                  );
                                                   userMessage.value = "";
                                                   useControllerMessage.text =
                                                       "";
-
-                                                  useControllerScrollMessage
-                                                      .animateTo(
-                                                          useControllerScrollMessage
-                                                              .position
-                                                              .minScrollExtent,
-                                                          duration:
-                                                              const Duration(
-                                                                  seconds: 2),
-                                                          curve: Curves
-                                                              .fastOutSlowIn);
                                                   isLoadingResponseGemini
                                                       .value = false;
                                                 }
