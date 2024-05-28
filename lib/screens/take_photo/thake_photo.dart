@@ -175,7 +175,7 @@ class TakePhoto extends HookConsumerWidget {
                               final Message newMessage = Message(
                                 sendMessages: userMessage.value,
                                 receiveMessages:
-                                    "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
+                                    "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nCuriosidades de um destino.\nTambém pode usar imagens do seu celular  para receber detalhes\n.Tome cuidado com erros de portugues",
                                 id: id,
                                 isLoadingResponse: false,
                               );

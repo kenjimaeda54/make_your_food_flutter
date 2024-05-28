@@ -135,29 +135,31 @@ Widget _handleContainerMessages(BuildContext context, String message,
     },
   );
 
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 30),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Padding(
-            padding: const EdgeInsets.only(top: 35, right: 10),
-            child: Container(
-              width: 35,
-              height: 35,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: isUser
-                        ? const AssetImage("assets/images/avatar_one.jpg")
-                        : const AssetImage("assets/images/gemini.png")),
-                shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-            )),
-        Expanded(flex: 1, child: returnResponseTypeView)
-      ],
-    ),
-  );
+  return isUser && message.isEmpty && file == null
+      ? const SizedBox()
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 30),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Padding(
+                  padding: const EdgeInsets.only(top: 35, right: 10),
+                  child: Container(
+                    width: 35,
+                    height: 35,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: isUser
+                              ? const AssetImage("assets/images/avatar_one.jpg")
+                              : const AssetImage("assets/images/gemini.png")),
+                      shape: BoxShape.circle,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  )),
+              Expanded(flex: 1, child: returnResponseTypeView)
+            ],
+          ),
+        );
 }

@@ -27,6 +27,7 @@ dependencies:
   image_cropper: ^6.0.0
   super_sliver_list: ^0.4.1
   flutter_image_compress: ^2.3.0
+  flutter_emoji: ^2.5.1
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_emoji/flutter_emoji.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -75,6 +76,18 @@ class HomeScreen extends HookConsumerWidget {
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
+        if (messages.isEmpty) {
+          Emoji('paperclip', '📎');
+          final parser = EmojiParser();
+          final message = Message(
+              sendMessages: "",
+              receiveMessages:
+                  "Bem vindo!\nNos iremos te auxiliar no seu próximo destino.\nVocê pode selecionar uma das opções abaixo é após isto mencionar  no campo de pesquisa a cidade que deseja.\nTambém e livre para digitar qualquer assunto porem recomendado que siga os passos para usufruir e aproveitar  máximo o aplicativo.\nSe possui uma dúvida sobre uma cidade pode usar o ${parser.emojify(':paperclip:')} para selecionar uma foto da sua galeria ou tirar sua própria.",
+              id: const Uuid().v4(),
+              isLoadingResponse: false);
+          messages.add(message);
+        }
+
         final permissionPhoto = await PhotoManager.requestPermissionExtend();
         if (permissionPhoto.isAuth) {
           cameras.value = await availableCameras();
@@ -264,10 +277,10 @@ class HomeScreen extends HookConsumerWidget {
                                                           newMessage);
 
                                                   _listController.animateToItem(
-                                                    index: messages.length - 1,
+                                                    index: 0,
                                                     scrollController:
                                                         useControllerScrollMessage,
-                                                    alignment: 0.1,
+                                                    alignment: 0,
                                                     duration: (_) =>
                                                         const Duration(
                                                             milliseconds: 250),
@@ -289,7 +302,7 @@ class HomeScreen extends HookConsumerWidget {
                                                   sendMessages:
                                                       userMessage.value,
                                                   receiveMessages:
-                                                      "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
+                                                      "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nCuriosidades de um destino.\nTambém pode usar imagens do seu celular  para receber detalhes\n.Tome cuidado com erros de portugues",
                                                   id: id,
                                                   isLoadingResponse: false,
                                                 );
