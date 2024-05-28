@@ -21,7 +21,6 @@ mixin _$Message {
   String get id => throw _privateConstructorUsedError;
   bool get isLoadingResponse => throw _privateConstructorUsedError;
   File? get file => throw _privateConstructorUsedError;
-  String? get heroAnimation => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $MessageCopyWith<Message> get copyWith => throw _privateConstructorUsedError;
@@ -37,8 +36,7 @@ abstract class $MessageCopyWith<$Res> {
       String receiveMessages,
       String id,
       bool isLoadingResponse,
-      File? file,
-      String? heroAnimation});
+      File? file});
 }
 
 /// @nodoc
@@ -59,7 +57,6 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
     Object? id = null,
     Object? isLoadingResponse = null,
     Object? file = freezed,
-    Object? heroAnimation = freezed,
   }) {
     return _then(_value.copyWith(
       sendMessages: null == sendMessages
@@ -82,10 +79,6 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
           ? _value.file
           : file // ignore: cast_nullable_to_non_nullable
               as File?,
-      heroAnimation: freezed == heroAnimation
-          ? _value.heroAnimation
-          : heroAnimation // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -102,8 +95,7 @@ abstract class _$$MessagesImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
       String receiveMessages,
       String id,
       bool isLoadingResponse,
-      File? file,
-      String? heroAnimation});
+      File? file});
 }
 
 /// @nodoc
@@ -122,7 +114,6 @@ class __$$MessagesImplCopyWithImpl<$Res>
     Object? id = null,
     Object? isLoadingResponse = null,
     Object? file = freezed,
-    Object? heroAnimation = freezed,
   }) {
     return _then(_$MessagesImpl(
       sendMessages: null == sendMessages
@@ -145,10 +136,6 @@ class __$$MessagesImplCopyWithImpl<$Res>
           ? _value.file
           : file // ignore: cast_nullable_to_non_nullable
               as File?,
-      heroAnimation: freezed == heroAnimation
-          ? _value.heroAnimation
-          : heroAnimation // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -161,8 +148,7 @@ class _$MessagesImpl with DiagnosticableTreeMixin implements _Messages {
       required this.receiveMessages,
       required this.id,
       required this.isLoadingResponse,
-      this.file,
-      this.heroAnimation});
+      this.file});
 
   @override
   final String sendMessages;
@@ -174,12 +160,10 @@ class _$MessagesImpl with DiagnosticableTreeMixin implements _Messages {
   final bool isLoadingResponse;
   @override
   final File? file;
-  @override
-  final String? heroAnimation;
 
   @override
   String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
-    return 'Message(sendMessages: $sendMessages, receiveMessages: $receiveMessages, id: $id, isLoadingResponse: $isLoadingResponse, file: $file, heroAnimation: $heroAnimation)';
+    return 'Message(sendMessages: $sendMessages, receiveMessages: $receiveMessages, id: $id, isLoadingResponse: $isLoadingResponse, file: $file)';
   }
 
   @override
@@ -191,8 +175,7 @@ class _$MessagesImpl with DiagnosticableTreeMixin implements _Messages {
       ..add(DiagnosticsProperty('receiveMessages', receiveMessages))
       ..add(DiagnosticsProperty('id', id))
       ..add(DiagnosticsProperty('isLoadingResponse', isLoadingResponse))
-      ..add(DiagnosticsProperty('file', file))
-      ..add(DiagnosticsProperty('heroAnimation', heroAnimation));
+      ..add(DiagnosticsProperty('file', file));
   }
 
   @override
@@ -207,14 +190,12 @@ class _$MessagesImpl with DiagnosticableTreeMixin implements _Messages {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.isLoadingResponse, isLoadingResponse) ||
                 other.isLoadingResponse == isLoadingResponse) &&
-            (identical(other.file, file) || other.file == file) &&
-            (identical(other.heroAnimation, heroAnimation) ||
-                other.heroAnimation == heroAnimation));
+            (identical(other.file, file) || other.file == file));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, sendMessages, receiveMessages,
-      id, isLoadingResponse, file, heroAnimation);
+  int get hashCode => Object.hash(
+      runtimeType, sendMessages, receiveMessages, id, isLoadingResponse, file);
 
   @JsonKey(ignore: true)
   @override
@@ -229,8 +210,7 @@ abstract class _Messages implements Message {
       required final String receiveMessages,
       required final String id,
       required final bool isLoadingResponse,
-      final File? file,
-      final String? heroAnimation}) = _$MessagesImpl;
+      final File? file}) = _$MessagesImpl;
 
   @override
   String get sendMessages;
@@ -242,8 +222,6 @@ abstract class _Messages implements Message {
   bool get isLoadingResponse;
   @override
   File? get file;
-  @override
-  String? get heroAnimation;
   @override
   @JsonKey(ignore: true)
   _$$MessagesImplCopyWith<_$MessagesImpl> get copyWith =>

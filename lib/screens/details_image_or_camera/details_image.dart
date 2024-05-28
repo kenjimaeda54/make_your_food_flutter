@@ -1,14 +1,10 @@
 import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/models/messages/messages.dart';
 import 'package:make_your_travel/models/messages/messages_model.dart';
-import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/screens/home/home.dart';
 import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
 import 'package:uuid/uuid.dart';
@@ -34,6 +30,7 @@ class DetailsImage extends HookConsumerWidget {
 
     return Scaffold(
         extendBodyBehindAppBar: true,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.transparent,
@@ -51,7 +48,7 @@ class DetailsImage extends HookConsumerWidget {
                 tag: image.path,
                 child: Image.file(
                   image,
-                  fit: BoxFit.fill,
+                  fit: BoxFit.contain,
                   gaplessPlayback: true,
                   filterQuality: FilterQuality.high,
                   cacheHeight: 2000,
@@ -75,15 +72,15 @@ class DetailsImage extends HookConsumerWidget {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        final id = Uuid().v4();
+                        final id = const Uuid().v4();
                         try {
                           final Message newMessage = Message(
-                              sendMessages: userMessage.value,
-                              receiveMessages: "",
-                              id: id,
-                              isLoadingResponse: true,
-                              file: image,
-                              heroAnimation: ref.read(imageHeroAnimationState));
+                            sendMessages: userMessage.value,
+                            receiveMessages: "",
+                            id: id,
+                            isLoadingResponse: true,
+                            file: image,
+                          );
                           ref
                               .read(messagesProvider.notifier)
                               .addMessage(newMessage);
@@ -112,27 +109,25 @@ class DetailsImage extends HookConsumerWidget {
 
                           if (responseModel != null) {
                             final Message newMessage = Message(
-                                sendMessages: userMessage.value,
-                                receiveMessages:
-                                    responseModel.content?.parts?.last.text ??
-                                        "",
-                                id: id,
-                                isLoadingResponse: false,
-                                file: image,
-                                heroAnimation:
-                                    ref.read(imageHeroAnimationState));
+                              sendMessages: userMessage.value,
+                              receiveMessages:
+                                  responseModel.content?.parts?.last.text ?? "",
+                              id: id,
+                              isLoadingResponse: false,
+                              file: image,
+                            );
                             ref
                                 .read(messagesProvider.notifier)
                                 .updateMessage(newMessage);
                           }
                         } catch (e) {
                           final Message newMessage = Message(
-                              sendMessages: userMessage.value,
-                              receiveMessages:
-                                  "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
-                              id: id,
-                              isLoadingResponse: false,
-                              heroAnimation: ref.read(imageHeroAnimationState));
+                            sendMessages: userMessage.value,
+                            receiveMessages:
+                                "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
+                            id: id,
+                            isLoadingResponse: false,
+                          );
 
                           ref
                               .read(messagesProvider.notifier)

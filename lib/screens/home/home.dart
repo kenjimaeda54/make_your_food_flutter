@@ -1,12 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
-
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -141,11 +136,8 @@ class HomeScreen extends HookConsumerWidget {
                             controller: useControllerScrollMessage,
                             listController: _listController,
                             itemCount: messages.length,
-                            itemBuilder: (context, index) => Hero(
-                                  tag: messages[index].heroAnimation!,
-                                  child: RowMessages(
-                                    messages: messages[index],
-                                  ),
+                            itemBuilder: (context, index) => RowMessages(
+                                  messages: messages[index],
                                 ))),
                     Align(
                       alignment: Alignment.bottomCenter,

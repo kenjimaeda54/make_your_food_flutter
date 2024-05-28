@@ -14,6 +14,5 @@ class Message with _$Message {
     required String id,
     required bool isLoadingResponse,
     File? file,
-    String? heroAnimation,
   }) = _Messages;
 }

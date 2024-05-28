@@ -1,16 +1,13 @@
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:make_your_travel/models/messages/messages.dart';
 import 'package:make_your_travel/models/messages/messages_model.dart';
-import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/screens/home/home.dart';
 import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
 import 'package:uuid/uuid.dart';
@@ -124,17 +121,16 @@ class TakePhoto extends HookConsumerWidget {
                         ),
                         GestureDetector(
                           onTap: () async {
-                            final id = Uuid().v4();
+                            final id = const Uuid().v4();
                             try {
                               if (image.value == null) return;
                               final Message newMessage = Message(
-                                  sendMessages: userMessage.value,
-                                  receiveMessages: "",
-                                  id: id,
-                                  isLoadingResponse: true,
-                                  file: image.value,
-                                  heroAnimation:
-                                      ref.read(imageHeroAnimationState));
+                                sendMessages: userMessage.value,
+                                receiveMessages: "",
+                                id: id,
+                                isLoadingResponse: true,
+                                file: image.value,
+                              );
                               ref
                                   .read(messagesProvider.notifier)
                                   .addMessage(newMessage);
@@ -163,28 +159,26 @@ class TakePhoto extends HookConsumerWidget {
 
                               if (responseModel != null) {
                                 final Message newMessage = Message(
-                                    sendMessages: userMessage.value,
-                                    receiveMessages: responseModel
-                                            .content?.parts?.last.text ??
-                                        "",
-                                    id: id,
-                                    isLoadingResponse: false,
-                                    file: image.value,
-                                    heroAnimation:
-                                        ref.read(imageHeroAnimationState));
+                                  sendMessages: userMessage.value,
+                                  receiveMessages:
+                                      responseModel.content?.parts?.last.text ??
+                                          "",
+                                  id: id,
+                                  isLoadingResponse: false,
+                                  file: image.value,
+                                );
                                 ref
                                     .read(messagesProvider.notifier)
                                     .updateMessage(newMessage);
                               }
                             } catch (e) {
                               final Message newMessage = Message(
-                                  sendMessages: userMessage.value,
-                                  receiveMessages:
-                                      "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
-                                  id: id,
-                                  isLoadingResponse: false,
-                                  heroAnimation:
-                                      ref.read(imageHeroAnimationState));
+                                sendMessages: userMessage.value,
+                                receiveMessages:
+                                    "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
+                                id: id,
+                                isLoadingResponse: false,
+                              );
 
                               ref
                                   .read(messagesProvider.notifier)
@@ -217,11 +211,12 @@ class TakePhoto extends HookConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           GestureDetector(
+                              onTap: () => Navigator.of(context).pop(),
                               child: Image.asset(
-                            "assets/images/close.png",
-                            width: 45,
-                            height: 45,
-                          )),
+                                "assets/images/close.png",
+                                width: 45,
+                                height: 45,
+                              )),
                           GestureDetector(
                             onTap: () async {
                               try {

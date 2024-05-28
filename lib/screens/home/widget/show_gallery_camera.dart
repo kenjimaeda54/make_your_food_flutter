@@ -1,13 +1,10 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/providers/images_gallery.dart';
 import 'package:make_your_travel/screens/details_image_or_camera/details_image.dart';
 import 'package:make_your_travel/screens/take_photo/thake_photo.dart';
-import 'package:make_your_travel/utils/compress_image.dart';
 import 'package:open_settings_plus/core/open_settings_plus.dart';
 import 'package:open_settings_plus/open_settings_plus.dart';
 
@@ -29,17 +26,10 @@ class ShowGalleryCamera extends HookConsumerWidget {
               if (stateGallery[index].type == TypeImageGallery.controller) {
                 return stateGallery[index].cameraController != null
                     ? GestureDetector(
-                        onTap: () {
-                          // ref.read(imageHeroAnimationState.notifier).state =
-                          //     stateGallery[index]
-                          //         .cameraController!
-                          //         .description
-                          //         .name;
-                          Navigator.of(context).push(TakePhoto.route(
-                              cameraController:
-                                  stateGallery[index].cameraController!,
-                              cameras: cameras));
-                        },
+                        onTap: () => Navigator.of(context).push(TakePhoto.route(
+                            cameraController:
+                                stateGallery[index].cameraController!,
+                            cameras: cameras)),
                         child: Hero(
                           tag: stateGallery[index]
                               .cameraController!
@@ -71,12 +61,8 @@ class ShowGalleryCamera extends HookConsumerWidget {
               }
               if (stateGallery[index].type == TypeImageGallery.imagem) {
                 return GestureDetector(
-                  onTap: () => {
-                    // ref.read(imageHeroAnimationState.notifier).state =
-                    //     stateGallery[index].image!.path,
-                    Navigator.of(context).push(
-                        DetailsImage.route(image: stateGallery[index].image!))
-                  },
+                  onTap: () => Navigator.of(context).push(
+                      DetailsImage.route(image: stateGallery[index].image!)),
                   child: Hero(
                     tag: stateGallery[index].image!.path,
                     child: Image.file(
