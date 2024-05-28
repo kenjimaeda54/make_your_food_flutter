@@ -11,9 +11,6 @@ import 'package:make_your_travel/models/messages/messages_model.dart';
 import 'package:make_your_travel/providers/image_hero_animation.dart';
 import 'package:make_your_travel/screens/home/home.dart';
 import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:uuid/uuid.dart';
 
 //hero animation
@@ -25,7 +22,7 @@ class DetailsImage extends HookConsumerWidget {
   DetailsImage({super.key, required this.image});
 
   static Route route({required File image}) {
-    return MaterialWithModalsPageRoute(
+    return MaterialPageRoute(
       builder: (_) => DetailsImage(image: image),
     );
   }
@@ -51,17 +48,17 @@ class DetailsImage extends HookConsumerWidget {
         body: Stack(
           children: [
             Hero(
-              tag: ref.read(imageHeroAnimation),
-              child: SizedBox(
-                  width: double.infinity,
+                tag: image.path,
+                child: Image.file(
+                  image,
+                  fit: BoxFit.fill,
+                  gaplessPlayback: true,
+                  filterQuality: FilterQuality.high,
+                  cacheHeight: 2000,
+                  cacheWidth: 2000,
                   height: double.infinity,
-                  child: Image(
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
-                    image: ResizeImage(FileImage(image),
-                        width: 1000, height: 1000),
-                  )),
-            ),
+                  width: double.infinity,
+                )),
             Padding(
               padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).padding.bottom + 30),
@@ -86,7 +83,7 @@ class DetailsImage extends HookConsumerWidget {
                               id: id,
                               isLoadingResponse: true,
                               file: image,
-                              heroAnimation: ref.read(imageHeroAnimation));
+                              heroAnimation: ref.read(imageHeroAnimationState));
                           ref
                               .read(messagesProvider.notifier)
                               .addMessage(newMessage);
@@ -122,7 +119,8 @@ class DetailsImage extends HookConsumerWidget {
                                 id: id,
                                 isLoadingResponse: false,
                                 file: image,
-                                heroAnimation: ref.read(imageHeroAnimation));
+                                heroAnimation:
+                                    ref.read(imageHeroAnimationState));
                             ref
                                 .read(messagesProvider.notifier)
                                 .updateMessage(newMessage);
@@ -134,7 +132,7 @@ class DetailsImage extends HookConsumerWidget {
                                   "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
                               id: id,
                               isLoadingResponse: false,
-                              heroAnimation: ref.read(imageHeroAnimation));
+                              heroAnimation: ref.read(imageHeroAnimationState));
 
                           ref
                               .read(messagesProvider.notifier)

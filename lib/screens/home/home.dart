@@ -12,6 +12,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/models/messages/messages.dart';
 import 'package:make_your_travel/models/messages/messages_model.dart';
+import 'package:make_your_travel/providers/images_gallery.dart';
 import 'package:make_your_travel/screens/home/widget/row_messages.dart';
 import 'package:make_your_travel/screens/home/widget/show_gallery_camera.dart';
 import 'package:make_your_travel/widget/common_text_field/common_text_field.dart';
@@ -38,7 +39,6 @@ class HomeScreen extends HookConsumerWidget {
     //deixar todas variaveis possiveis fora do metodo build, so os hooks, exempo cameraController aqui sera sera rebuildado
     //dando nullo no final
     final focusTextMessage = useFocusNode();
-    var imagesGallery = useState<List<File>>([]);
     var cameras = useState<List<CameraDescription>>([]);
     final userMessage = useState("");
     final List<Message> messages =
@@ -47,28 +47,34 @@ class HomeScreen extends HookConsumerWidget {
     final useControllerScrollMessage = useScrollController();
     final isLoadingResponseGemini = useState(false);
     final isLoadingAssets = useState(true);
+    final imagesGallery = ref.watch(imagesGalleryState);
 
     Future<bool> handleProcessPhoto() async {
-      final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
-          type: RequestType.image,
-          filterOption: FilterOptionGroup(
-              imageOption: const FilterOption(
-                  needTitle: false,
-                  sizeConstraint: SizeConstraint(ignoreSize: true))));
-      for (var it in paths) {
-        final countAssets = await it.assetCountAsync;
-        if (countAssets < 1) return false;
-        final listAssets =
-            await it.getAssetListRange(start: 0, end: countAssets);
+      if (imagesGallery.isEmpty) {
+        final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
+            type: RequestType.image,
+            filterOption: FilterOptionGroup(
+                imageOption: const FilterOption(
+                    needTitle: false,
+                    sizeConstraint: SizeConstraint(ignoreSize: true))));
+        for (var it in paths) {
+          final countAssets = await it.assetCountAsync;
+          if (countAssets < 1) return false;
+          final listAssets =
+              await it.getAssetListPaged(page: 0, size: countAssets);
 
-        for (var asset in listAssets) {
-          final imageFile = await asset.file ?? File("");
-          if (!imagesGallery.value.contains(imageFile)) {
-            //transformar em uma classe que retorna
-            imagesGallery.value = [...imagesGallery.value, imageFile];
+          for (var asset in listAssets) {
+            final imageFile = await asset.file ?? File("");
+            final StateGalleryImage stateGallery = (
+              image: imageFile,
+              type: TypeImageGallery.imagem,
+              cameraController: null
+            );
+            ref.read(imagesGalleryState.notifier).state.add(stateGallery);
           }
         }
       }
+
       return false;
     }
 
@@ -76,8 +82,24 @@ class HomeScreen extends HookConsumerWidget {
       Future.delayed(Duration.zero, () async {
         final permissionPhoto = await PhotoManager.requestPermissionExtend();
         if (permissionPhoto.isAuth) {
-          if (imagesGallery.value.isEmpty) {
-            isLoadingAssets.value = await handleProcessPhoto();
+          cameras.value = await availableCameras();
+          isLoadingAssets.value = await handleProcessPhoto();
+
+          if (cameras.value.isNotEmpty &&
+              imagesGallery.first.cameraController == null) {
+            _cameraController = CameraController(
+                cameras.value.last, ResolutionPreset.high,
+                enableAudio: false);
+            await _cameraController.initialize();
+            final StateGalleryImage stateGallery = (
+              image: null,
+              type: TypeImageGallery.controller,
+              cameraController: _cameraController
+            );
+            ref
+                .read(imagesGalleryState.notifier)
+                .state
+                .insert(0, stateGallery); //inserir no inicio
           }
         }
 
@@ -85,23 +107,10 @@ class HomeScreen extends HookConsumerWidget {
           PhotoManager.setIgnorePermissionCheck(true);
         }
       });
-    }, const []);
-
-    useEffect(() {
-      Future.delayed(Duration.zero, () async {
-        try {
-          cameras.value = await availableCameras();
-
-          if (cameras.value.isNotEmpty) {
-            _cameraController = CameraController(
-                cameras.value.last, ResolutionPreset.high,
-                enableAudio: false);
-            await _cameraController.initialize();
-          }
-        } catch (e) {
-          print(e);
-        }
-      });
+      return () {
+        useControllerScrollMessage.dispose();
+        useControllerScrollMessage.dispose();
+      };
     }, [cameras]);
 
     return GestureDetector(
@@ -127,23 +136,17 @@ class HomeScreen extends HookConsumerWidget {
                     Expanded(
                         flex: 1,
                         child: SuperListView.builder(
-                          padding: const EdgeInsets.all(0),
-                          reverse: true,
-                          controller: useControllerScrollMessage,
-                          listController: _listController,
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) =>
-                              messages[index].heroAnimation != null
-                                  ? Hero(
-                                      tag: messages[index].heroAnimation!,
-                                      child: RowMessages(
-                                        messages: messages[index],
-                                      ),
-                                    )
-                                  : RowMessages(
-                                      messages: messages[index],
-                                    ),
-                        )),
+                            padding: const EdgeInsets.all(0),
+                            reverse: true,
+                            controller: useControllerScrollMessage,
+                            listController: _listController,
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) => Hero(
+                                  tag: messages[index].heroAnimation!,
+                                  child: RowMessages(
+                                    messages: messages[index],
+                                  ),
+                                ))),
                     Align(
                       alignment: Alignment.bottomCenter,
                       child: Container(
@@ -173,13 +176,11 @@ class HomeScreen extends HookConsumerWidget {
                                       enableDrag: true,
                                       builder: (context) {
                                         return ShowGalleryCamera(
-                                          imagesGallery: imagesGallery.value,
                                           cameras: cameras.value,
-                                          cameraController: _cameraController,
                                         );
                                       });
                                 },
-                                child: imagesGallery.value.isNotEmpty &&
+                                child: imagesGallery.isNotEmpty &&
                                         !isLoadingAssets.value
                                     ? Image.asset(
                                         "assets/images/clip.png",
@@ -274,7 +275,7 @@ class HomeScreen extends HookConsumerWidget {
                                                     index: messages.length - 1,
                                                     scrollController:
                                                         useControllerScrollMessage,
-                                                    alignment: 0.3,
+                                                    alignment: 0.1,
                                                     duration: (_) =>
                                                         const Duration(
                                                             milliseconds: 250),

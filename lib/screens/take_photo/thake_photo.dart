@@ -72,7 +72,7 @@ class TakePhoto extends HookConsumerWidget {
         children: [
           image.value != null
               ? Hero(
-                  tag: ref.read(imageHeroAnimation),
+                  tag: cameraController.description.name,
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
@@ -84,7 +84,7 @@ class TakePhoto extends HookConsumerWidget {
                   ),
                 )
               : Hero(
-                  tag: ref.read(imageHeroAnimation),
+                  tag: cameraController.description.name,
                   child: SizedBox(
                     width: double.infinity,
                     height: double.infinity,
@@ -133,7 +133,8 @@ class TakePhoto extends HookConsumerWidget {
                                   id: id,
                                   isLoadingResponse: true,
                                   file: image.value,
-                                  heroAnimation: ref.read(imageHeroAnimation));
+                                  heroAnimation:
+                                      ref.read(imageHeroAnimationState));
                               ref
                                   .read(messagesProvider.notifier)
                                   .addMessage(newMessage);
@@ -170,7 +171,7 @@ class TakePhoto extends HookConsumerWidget {
                                     isLoadingResponse: false,
                                     file: image.value,
                                     heroAnimation:
-                                        ref.read(imageHeroAnimation));
+                                        ref.read(imageHeroAnimationState));
                                 ref
                                     .read(messagesProvider.notifier)
                                     .updateMessage(newMessage);
@@ -182,7 +183,8 @@ class TakePhoto extends HookConsumerWidget {
                                       "Seja mais detalhistas nas perguntas.\nExemplo:\nQual melhor destino para Bahia?\nGere images de pássaros.\nTambém pode usar imagens do seu celular  para receber detalhes\n",
                                   id: id,
                                   isLoadingResponse: false,
-                                  heroAnimation: ref.read(imageHeroAnimation));
+                                  heroAnimation:
+                                      ref.read(imageHeroAnimationState));
 
                               ref
                                   .read(messagesProvider.notifier)

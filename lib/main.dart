@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:make_your_travel/constants/constants_environment.dart';
+import 'package:make_your_travel/utils/constants_environment.dart';
 import 'package:make_your_travel/screens/home/home.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
