@@ -1,5 +1,5 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:make_your_travel/models/messages/messages.dart';
+import 'package:make_your_travel/old_chat/models/messages/messages.dart';
 
 class MessagesModel extends StateNotifier<List<Message>> {
   MessagesModel() : super([]);

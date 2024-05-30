@@ -26,8 +26,8 @@ dependencies:
   riverpod_annotation: ^2.3.5
   image_cropper: ^6.0.0
   super_sliver_list: ^0.4.1
-  flutter_image_compress: ^2.3.0
   flutter_emoji: ^2.5.1
+  flutter_svg: ^2.0.10+1
 
 dev_dependencies:
   flutter_test:
@@ -41,6 +41,8 @@ flutter:
     - .env
     - assets/images/
     - assets/rive/gemini_rive.riv
+    - assets/rive/splash_screen.riv
+    - assets/icons/
   fonts:
     - family: Ubuntu
       fonts:
