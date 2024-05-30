@@ -28,6 +28,8 @@ dependencies:
   super_sliver_list: ^0.4.1
   flutter_emoji: ^2.5.1
   flutter_svg: ^2.0.10+1
+  scrollview_observer: ^1.20.0
+  pausable_timer: ^3.1.0+3
 
 dev_dependencies:
   flutter_test:
