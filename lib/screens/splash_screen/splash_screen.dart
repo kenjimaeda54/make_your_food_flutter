@@ -64,18 +64,18 @@ class SplashScreen extends HookConsumerWidget {
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
+        cameras.value = await availableCameras();
+        if (cameras.value.isNotEmpty && cameraController == null) {
+          _cameraController = CameraController(
+              cameras.value.last, ResolutionPreset.high,
+              enableAudio: false);
+          await _cameraController.initialize();
+          ref.read(cameraControllerState.notifier).state = _cameraController;
+        }
+
         final permissionPhoto = await PhotoManager.requestPermissionExtend();
         if (permissionPhoto.isAuth) {
-          cameras.value = await availableCameras();
           await handleProcessPhoto();
-
-          if (cameras.value.isNotEmpty && cameraController == null) {
-            _cameraController = CameraController(
-                cameras.value.last, ResolutionPreset.high,
-                enableAudio: false);
-            await _cameraController.initialize();
-            ref.read(cameraControllerState.notifier).state = _cameraController;
-          }
         }
 
         if (permissionPhoto.hasAccess) {

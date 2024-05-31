@@ -1,9 +1,5 @@
-import 'dart:async';
-
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/home/widget/button_type_travel.dart';
@@ -14,7 +10,6 @@ import 'package:make_your_travel/states/images_gallery.dart';
 import 'package:make_your_travel/utils/gradient_color.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:pausable_timer/pausable_timer.dart';
-import 'package:rive/rive.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 
 typedef OptionsTripPlan = ({
@@ -28,7 +23,9 @@ typedef CardImagesSuggestions = ({String title, String image});
 
 class HomeScreen extends HookConsumerWidget {
   HomeScreen({super.key});
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollCustomController = ScrollController();
+  final ScrollController _scrollControllerList = ScrollController();
+
   BuildContext? _contextSliverList;
   BuildContext? _contextSliverGrid;
 
@@ -91,7 +88,7 @@ class HomeScreen extends HookConsumerWidget {
     final imageGallery = ref.watch(imagesGalleryState);
     final cameraController = ref.watch(cameraControllerState);
     final SliverObserverController sliverObserver =
-        SliverObserverController(controller: _scrollController);
+        SliverObserverController(controller: _scrollCustomController);
     final showFloatingButton = useState(false);
     PausableTimer timer = PausableTimer(const Duration(milliseconds: 600), () {
       showFloatingButton.value = true;
@@ -103,16 +100,16 @@ class HomeScreen extends HookConsumerWidget {
       //https://medium.com/@linxunfeng/flutter-scrolling-to-a-specific-item-in-the-scrollview-b89d3f10eee0
       WidgetsBinding.instance.addPostFrameCallback(
         (timeStamp) {
-          _scrollController.position.isScrollingNotifier.addListener(() {
+          _scrollCustomController.position.isScrollingNotifier.addListener(() {
             //para saber se esta no inicio da lista https://stackoverflow.com/questions/46377779/how-to-check-if-scroll-position-is-at-top-or-bottom-in-listview
-            if (_scrollController.position.pixels < 50) {
+            if (_scrollCustomController.position.pixels < 50) {
               showFloatingButton.value = false;
               timer.pause();
             }
 
             //abaixo para saber quando iniciou ou parou de scrollar
-            if (!_scrollController.position.isScrollingNotifier.value &&
-                _scrollController.position.pixels > 30) {
+            if (!_scrollCustomController.position.isScrollingNotifier.value &&
+                _scrollCustomController.position.pixels > 30) {
               timer.isExpired ? timer.reset() : timer.start();
             }
           });
@@ -145,16 +142,55 @@ class HomeScreen extends HookConsumerWidget {
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
             sliver: SliverToBoxAdapter(
-              child: Expanded(
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: CameraPreview(cameraController!),
+              child: cameraController != null
+                  ? Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: CameraPreview(cameraController),
+                        ),
+                        Positioned.fill(
+                          bottom: 0,
+                          top: MediaQuery.of(context).size.height * 0.62,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            decoration: BoxDecoration(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Image.asset(
+                                  "assets/images/flash_on.png",
+                                  width: 20,
+                                  height: 20,
+                                  filterQuality: FilterQuality.high,
+                                ),
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                ),
+                                Image.asset(
+                                  "assets/images/turn.png",
+                                  width: 20,
+                                  height: 20,
+                                  filterQuality: FilterQuality.high,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     )
-                  ],
-                ),
-              ),
+                  : Container(),
             ),
           );
         default:
@@ -220,8 +256,9 @@ class HomeScreen extends HookConsumerWidget {
           ];
         },
         child: CustomScrollView(
-          controller: _scrollController,
-          physics: const ClampingScrollPhysics(),
+          controller: _scrollCustomController,
+          physics:
+              const ClampingScrollPhysics(), //para evitar o bounce no scroll
           slivers: [
             SliverPadding(
                 padding: EdgeInsets.only(
@@ -232,18 +269,27 @@ class HomeScreen extends HookConsumerWidget {
                   child: SizedBox(
                     height: 50, //precisa do height para nao quebrar
                     child: ListView.builder(
+                        physics:
+                            const ClampingScrollPhysics(), //para evitar o bounce na aniamacao
                         scrollDirection: Axis.horizontal,
                         itemCount: optionsTripPlan.length,
+                        controller: _scrollControllerList,
                         itemBuilder: ((context, index) {
                           _contextSliverList ??=
                               context; //Assign value to b if b is null; otherwise, b stays the same , ou seja se _contextSliverList for nullo assume ele se nao o direito
                           //cursorColor ??= selectionTheme.cursorColor ?? cupertinoTheme.primaryColor;
-//https://stackoverflow.com/questions/72207475/what-do-these-symbols-mean-in-flutter
+                          //https://stackoverflow.com/questions/72207475/what-do-these-symbols-mean-in-flutter
+                          //nao possui sliver horizontal
 
                           return ButtonTypeTravel(
                             tripPlan: optionsTripPlan[index],
                             idSelected: idSelected.value,
                             actionTapTypeTravel: () {
+                              _scrollControllerList.animateTo(
+                                index * 120, //largura do item vezes o index
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
                               idSelected.value = optionsTripPlan[index].id;
                             },
                           );
