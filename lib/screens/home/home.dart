@@ -5,9 +5,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/home/widget/button_type_travel.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_gallery.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_suggestions.dart';
+import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
 import 'package:make_your_travel/states/camera_provider.dart';
 import 'package:make_your_travel/states/images_gallery.dart';
 import 'package:make_your_travel/utils/gradient_color.dart';
+import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
@@ -64,22 +66,7 @@ class HomeScreen extends HookConsumerWidget {
   ];
 
   static Route route() {
-    return PageRouteBuilder(
-        pageBuilder: (_, __, ___) => HomeScreen(),
-        transitionsBuilder: (_, animation, __, child) {
-          const begin = Offset(0.0, 1.0);
-          const end = Offset.zero;
-          const curve = Curves.ease;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(seconds: 1));
+    return RouteBottomToTopAnimated(widget: HomeScreen());
   }
 
   @override
@@ -214,7 +201,7 @@ class HomeScreen extends HookConsumerWidget {
                     child: CardImageGallery(file: imageGallery[index].image!),
                   );
                 }
-                ;
+
                 return CardImageGallery(file: imageGallery[index].image!);
               }, childCount: imageGallery.length),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -226,7 +213,6 @@ class HomeScreen extends HookConsumerWidget {
     }
 
     return CustomScaffold(
-      gradient: gradientBackground,
       floatingActionButton: showFloatingButton.value
           ? ElevatedButton(
               style: ButtonStyle(
@@ -285,6 +271,12 @@ class HomeScreen extends HookConsumerWidget {
                             tripPlan: optionsTripPlan[index],
                             idSelected: idSelected.value,
                             actionTapTypeTravel: () {
+                              switch (index) {
+                                case 3:
+                                  Navigator.of(context)
+                                      .push(SearchTripTravel.route());
+                              }
+
                               _scrollControllerList.animateTo(
                                 index * 120, //largura do item vezes o index
                                 duration: const Duration(milliseconds: 300),

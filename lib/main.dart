@@ -4,6 +4,7 @@ import 'package:make_your_travel/old_chat/utils/constants_environment.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/splash_screen/splash_screen.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
@@ -17,14 +18,21 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-  NavigatorState get _navigator => _navigatorKey.currentState!;
-  MainApp({super.key});
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('pt', 'pt_BR'),
+      ],
+      locale: const Locale('pt', 'pt_BR'),
       theme: ThemeData(
           fontFamily: "Ubuntu",
           useMaterial3: true,
