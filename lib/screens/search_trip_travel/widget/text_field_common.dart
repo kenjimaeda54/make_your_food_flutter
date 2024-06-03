@@ -7,20 +7,32 @@ class TextFieldCommon extends HookWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final bool? enabled;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onSubmitted;
+  final void Function(String)? onChanged;
   const TextFieldCommon(
       {super.key,
       required this.hintText,
       this.keyboardType,
       this.inputFormatters,
-      this.enabled});
+      this.focusNode,
+      this.enabled,
+      this.textInputAction,
+      this.onSubmitted,
+      this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextField(
+        focusNode: focusNode,
         inputFormatters: inputFormatters,
         enabled: enabled,
+        textInputAction: textInputAction,
+        onChanged: onChanged,
+        onSubmitted: onSubmitted,
         cursorColor: Theme.of(context).colorScheme.primary,
         cursorHeight: 15,
         maxLength: 27,

@@ -1,14 +1,16 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:make_your_travel/screens/details_image/details_image.dart';
 import 'package:make_your_travel/screens/home/widget/button_type_travel.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_gallery.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_suggestions.dart';
 import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
 import 'package:make_your_travel/states/camera_provider.dart';
 import 'package:make_your_travel/states/images_gallery.dart';
-import 'package:make_your_travel/utils/gradient_color.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:pausable_timer/pausable_timer.dart';
@@ -107,6 +109,18 @@ class HomeScreen extends HookConsumerWidget {
       };
     }, []);
 
+    Widget returnCardImage(File file) {
+      return Hero(
+        tag: file.absolute.path,
+        child: CardImageGallery(
+          file: file,
+          actionTapCard: () {
+            Navigator.of(context).push(DetailsImage.route(file: file));
+          },
+        ),
+      );
+    }
+
     shouldReturnWidgetIfClickedButtonType() {
       switch (idSelected.value) {
         case "fosno":
@@ -180,35 +194,38 @@ class HomeScreen extends HookConsumerWidget {
                   : Container(),
             ),
           );
-        default:
+
+        case 'fosno343':
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 13),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate((context, index) {
                 _contextSliverGrid ??= context;
+
                 if (index == 0) {
                   return ClipRRect(
-                    borderRadius:
-                        const BorderRadius.only(topLeft: Radius.circular(10)),
-                    child: CardImageGallery(file: imageGallery[index].image!),
-                  );
-                }
-                ;
-                if (index == 2) {
-                  return ClipRRect(
-                    borderRadius:
-                        const BorderRadius.only(topRight: Radius.circular(10)),
-                    child: CardImageGallery(file: imageGallery[index].image!),
-                  );
+                      borderRadius:
+                          const BorderRadius.only(topLeft: Radius.circular(10)),
+                      child: returnCardImage(imageGallery[index].image!));
                 }
 
-                return CardImageGallery(file: imageGallery[index].image!);
+                if (index == 2) {
+                  return ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                          topRight: Radius.circular(10)),
+                      child: returnCardImage(imageGallery[index].image!));
+                }
+
+                return returnCardImage(imageGallery[index].image!);
               }, childCount: imageGallery.length),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
               ),
             ),
           );
+
+        default:
+          return const SliverToBoxAdapter();
       }
     }
 
@@ -274,7 +291,18 @@ class HomeScreen extends HookConsumerWidget {
                               switch (index) {
                                 case 3:
                                   Navigator.of(context)
-                                      .push(SearchTripTravel.route());
+                                      .push(SearchTripTravel.route())
+                                      .then((value) {
+                                    if (index == 3) {
+                                      idSelected.value = optionsTripPlan[0].id;
+                                      _scrollControllerList.animateTo(
+                                        0, //largura do item vezes o index
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    }
+                                  });
                               }
 
                               _scrollControllerList.animateTo(

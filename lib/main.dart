@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:make_your_travel/old_chat/utils/constants_environment.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
@@ -7,12 +8,13 @@ import 'package:make_your_travel/screens/splash_screen/splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
+  timeDilation = 2;
   await dotenv.load(fileName: ".env");
   final apiKey = dotenv.env[environmentApiKey];
   Gemini.init(apiKey: apiKey!);
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(ProviderScope(
+  runApp(const ProviderScope(
     child: MainApp(),
   ));
 }
@@ -27,6 +29,7 @@ class MainApp extends StatelessWidget {
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
         Locale('en'),
