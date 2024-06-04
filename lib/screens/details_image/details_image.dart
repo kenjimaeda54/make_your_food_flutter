@@ -1,19 +1,24 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:image_cropper/image_cropper.dart';
 
 class DetailsImage extends HookWidget {
   final File file;
-  const DetailsImage({super.key, required this.file});
+  final String hero;
+  const DetailsImage({super.key, required this.file, required this.hero});
 
-  static Route route({required File file}) => RouteBottomToTopAnimated(
+  static Route route({required File file, required String hero}) =>
+      RouteBottomToTopAnimated(
           widget: DetailsImage(
         file: file,
+        hero: hero,
       ));
 
   @override
@@ -63,7 +68,7 @@ class DetailsImage extends HookWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Hero(
-                tag: file.absolute.path,
+                tag: hero,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: Image.file(
@@ -97,10 +102,14 @@ class DetailsImage extends HookWidget {
                         height: 35,
                       ),
                     ),
-                    Image.asset(
-                      "assets/images/send_message.png",
-                      width: 35,
-                      height: 35,
+                    GestureDetector(
+                      onTap: () => Navigator.of(context)
+                          .push(SearchTripTravel.route(file)),
+                      child: Image.asset(
+                        "assets/images/send_message.png",
+                        width: 35,
+                        height: 35,
+                      ),
                     )
                   ],
                 ),

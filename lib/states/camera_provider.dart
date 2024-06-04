@@ -1,4 +1,10 @@
 import 'package:camera/camera.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-final cameraControllerState = StateProvider<CameraController?>((ref) => null);
+typedef CameraControllerAndCamerasAvailable = ({
+  CameraController cameraController,
+  List<CameraDescription> cameras
+});
+
+final cameraControllerState =
+    StateProvider<CameraControllerAndCamerasAvailable?>((ref) => null);

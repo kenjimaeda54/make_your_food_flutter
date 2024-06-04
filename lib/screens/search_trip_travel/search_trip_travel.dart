@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -11,10 +13,13 @@ import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 
 class SearchTripTravel extends HookConsumerWidget {
-  const SearchTripTravel({super.key});
+  File? file;
+  SearchTripTravel({super.key, this.file});
 
-  static Route route() =>
-      RouteBottomToTopAnimated(widget: const SearchTripTravel());
+  static Route route([File? file]) => RouteBottomToTopAnimated(
+          widget: SearchTripTravel(
+        file: file,
+      ));
 
 //aplicar dropdown para quanitdade de pessoas
   @override
@@ -25,11 +30,16 @@ class SearchTripTravel extends HookConsumerWidget {
     final dateEnd = useState<String>("");
 
     bool shouldReturnTrueIfDisableButton() {
-      return dateStart.value.isEmpty ||
-          dateEnd.value.isEmpty ||
-          stateTrip.from.isEmpty ||
-          stateTrip.to.isEmpty ||
-          stateTrip.quantityPeople == 0;
+      return file == null
+          ? dateStart.value.isEmpty ||
+              dateEnd.value.isEmpty ||
+              stateTrip.origin.isEmpty ||
+              stateTrip.destiny.isEmpty ||
+              stateTrip.quantityPeople == 0
+          : dateStart.value.isEmpty ||
+              dateEnd.value.isEmpty ||
+              stateTrip.destiny.isEmpty ||
+              stateTrip.quantityPeople == 0;
     }
 
     String shouldReturnDateStart() {
@@ -51,6 +61,8 @@ class SearchTripTravel extends HookConsumerWidget {
     useEffect(() {
       dateStart.value = shouldReturnDateStart();
       dateEnd.value = shouldReturnDateEnd();
+
+      //comparar se o file e nullo para chamar o gemini
     }, const []);
 
     return GestureDetector(
@@ -89,12 +101,29 @@ class SearchTripTravel extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  const TextFieldCommon(
-                    hintText: 'De',
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const TextFieldCommon(
-                    hintText: 'Para',
+                  file != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: Image.file(
+                            file!,
+                            height: 150,
+                            width: double.infinity,
+                            cacheHeight:
+                                MediaQuery.of(context).size.height.toInt(),
+                            cacheWidth:
+                                MediaQuery.of(context).size.width.toInt(),
+                            fit: BoxFit.fill,
+                            filterQuality: FilterQuality.high,
+                          ),
+                        )
+                      : const TextFieldCommon(
+                          hintText: 'Origem Sao Paulo,Brasil',
+                          textInputAction: TextInputAction.next,
+                        ),
+                  TextFieldCommon(
+                    hintText: file != null
+                        ? 'Origem Rio de Janeiro,Brasil'
+                        : 'Destino Rio de Janeiro,Brasil',
                     textInputAction: TextInputAction.next,
                   ),
                   TextFieldCommon(

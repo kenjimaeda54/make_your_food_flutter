@@ -70,7 +70,11 @@ class SplashScreen extends HookConsumerWidget {
               cameras.value.last, ResolutionPreset.high,
               enableAudio: false);
           await _cameraController.initialize();
-          ref.read(cameraControllerState.notifier).state = _cameraController;
+          final CameraControllerAndCamerasAvailable
+              cameraControllerAndCamerasAvailable =
+              (cameraController: _cameraController, cameras: cameras.value);
+          ref.read(cameraControllerState.notifier).state =
+              cameraControllerAndCamerasAvailable;
         }
 
         final permissionPhoto = await PhotoManager.requestPermissionExtend();

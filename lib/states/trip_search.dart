@@ -3,20 +3,24 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 class TripSearch {
   DateTime? dayEnd;
   DateTime? dayStart;
-  String to;
+  String destiny;
   int quantityPeople;
-  String from;
+  String origin;
 
   TripSearch(
       {required this.dayEnd,
       required this.dayStart,
-      required this.from,
+      required this.origin,
       required this.quantityPeople,
-      required this.to});
+      required this.destiny});
 
   factory TripSearch.fromEmpty() {
     return TripSearch(
-        dayEnd: null, dayStart: null, from: "", quantityPeople: 0, to: "");
+        dayEnd: null,
+        dayStart: null,
+        origin: "",
+        quantityPeople: 0,
+        destiny: "");
   }
 }
 
