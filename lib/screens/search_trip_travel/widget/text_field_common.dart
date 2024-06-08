@@ -11,6 +11,7 @@ class TextFieldCommon extends HookWidget {
   final TextInputAction? textInputAction;
   final void Function(String)? onSubmitted;
   final void Function(String)? onChanged;
+  final String label;
   const TextFieldCommon(
       {super.key,
       required this.hintText,
@@ -20,42 +21,61 @@ class TextFieldCommon extends HookWidget {
       this.enabled,
       this.textInputAction,
       this.onSubmitted,
-      this.onChanged});
+      this.onChanged,
+      required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
-        focusNode: focusNode,
-        inputFormatters: inputFormatters,
-        enabled: enabled,
-        textInputAction: textInputAction,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        cursorColor: Theme.of(context).colorScheme.primary,
-        cursorHeight: 15,
-        maxLength: 27,
-        keyboardType: keyboardType,
-        style: TextStyle(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
-            fontSize: 16,
-            fontWeight: FontWeight.w300),
-        decoration: InputDecoration(
-            counterText: "",
-            hintText: hintText,
-            hintStyle: TextStyle(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 15,
+                fontWeight: FontWeight.w300),
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+          TextField(
+            focusNode: focusNode,
+            inputFormatters: inputFormatters,
+            enabled: enabled,
+            textInputAction: textInputAction,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+            cursorColor: Theme.of(context).colorScheme.primary,
+            cursorHeight: 15,
+            maxLength: 27,
+            keyboardType: keyboardType,
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
                 fontSize: 16,
                 fontWeight: FontWeight.w300),
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 5, horizontal: 13),
-            border: OutlineInputBorder(
-                borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor.withOpacity(0.8))),
-            disabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor.withOpacity(0.5)))),
+            decoration: InputDecoration(
+                counterText: "",
+                hintText: hintText,
+                hintStyle: TextStyle(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w300),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 5, horizontal: 13),
+                border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color:
+                            Theme.of(context).primaryColor.withOpacity(0.8))),
+                disabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color:
+                            Theme.of(context).primaryColor.withOpacity(0.5)))),
+          ),
+        ],
       ),
     );
   }

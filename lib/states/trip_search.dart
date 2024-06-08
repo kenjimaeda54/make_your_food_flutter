@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class TripSearch {
@@ -6,13 +8,15 @@ class TripSearch {
   String destiny;
   int quantityPeople;
   String origin;
+  File? file;
 
   TripSearch(
       {required this.dayEnd,
       required this.dayStart,
       required this.origin,
       required this.quantityPeople,
-      required this.destiny});
+      required this.destiny,
+      this.file});
 
   factory TripSearch.fromEmpty() {
     return TripSearch(

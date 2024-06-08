@@ -1,25 +1,26 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:make_your_travel/screens/plan_travel/plan_travel.dart';
 import 'package:make_your_travel/screens/search_trip_travel/widget/text_field_common.dart';
 import 'package:make_your_travel/screens/selection_date/selection_date.dart';
 import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
+import 'package:make_your_travel/utils/typedefs.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 
 class SearchTripTravel extends HookConsumerWidget {
-  File? file;
-  SearchTripTravel({super.key, this.file});
+  final gemini = Gemini.instance;
 
-  static Route route([File? file]) => RouteBottomToTopAnimated(
-          widget: SearchTripTravel(
-        file: file,
-      ));
+  SearchTripTravel({super.key});
+
+  static Route route([File? file]) =>
+      RouteBottomToTopAnimated(widget: SearchTripTravel());
 
 //aplicar dropdown para quanitdade de pessoas
   @override
@@ -30,16 +31,20 @@ class SearchTripTravel extends HookConsumerWidget {
     final dateEnd = useState<String>("");
 
     bool shouldReturnTrueIfDisableButton() {
-      return file == null
+      return ref.read(tripSearch).file == null
           ? dateStart.value.isEmpty ||
               dateEnd.value.isEmpty ||
               stateTrip.origin.isEmpty ||
               stateTrip.destiny.isEmpty ||
-              stateTrip.quantityPeople == 0
+              stateTrip.quantityPeople == 0 ||
+              stateTrip.dayEnd == null ||
+              stateTrip.dayStart == null
           : dateStart.value.isEmpty ||
               dateEnd.value.isEmpty ||
               stateTrip.destiny.isEmpty ||
-              stateTrip.quantityPeople == 0;
+              stateTrip.quantityPeople == 0 ||
+              stateTrip.dayEnd == null ||
+              stateTrip.dayStart == null;
     }
 
     String shouldReturnDateStart() {
@@ -61,8 +66,15 @@ class SearchTripTravel extends HookConsumerWidget {
     useEffect(() {
       dateStart.value = shouldReturnDateStart();
       dateEnd.value = shouldReturnDateEnd();
-
-      //comparar se o file e nullo para chamar o gemini
+      Future.delayed(Duration.zero, () {
+        if (stateTrip.dayStart == null) {
+          ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
+        }
+        if (stateTrip.dayEnd == null) {
+          ref.read(tripSearch.notifier).state.dayEnd =
+              DateTime.now().add(const Duration(days: 1));
+        }
+      });
     }, const []);
 
     return GestureDetector(
@@ -101,35 +113,66 @@ class SearchTripTravel extends HookConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  file != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(5),
-                          child: Image.file(
-                            file!,
-                            height: 150,
-                            width: double.infinity,
-                            cacheHeight:
-                                MediaQuery.of(context).size.height.toInt(),
-                            cacheWidth:
-                                MediaQuery.of(context).size.width.toInt(),
-                            fit: BoxFit.fill,
-                            filterQuality: FilterQuality.high,
-                          ),
+                  ref.read(tripSearch).file != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Destino",
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w300),
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: Image.file(
+                                ref.read(tripSearch).file!,
+                                height: 150,
+                                width: double.infinity,
+                                cacheHeight:
+                                    MediaQuery.of(context).size.height.toInt(),
+                                cacheWidth:
+                                    MediaQuery.of(context).size.width.toInt(),
+                                fit: BoxFit.fill,
+                                filterQuality: FilterQuality.high,
+                              ),
+                            )
+                          ],
                         )
-                      : const TextFieldCommon(
-                          hintText: 'Origem Sao Paulo,Brasil',
+                      : TextFieldCommon(
+                          label: 'Origem',
+                          hintText: 'Sao Paulo,Brasil',
                           textInputAction: TextInputAction.next,
+                          onChanged: (value) => ref
+                              .read(tripSearch.notifier)
+                              .state
+                              .origin = value,
                         ),
                   TextFieldCommon(
-                    hintText: file != null
-                        ? 'Origem Rio de Janeiro,Brasil'
-                        : 'Destino Rio de Janeiro,Brasil',
+                    label: ref.read(tripSearch).file != null
+                        ? 'Origem'
+                        : 'Destino',
+                    hintText: 'Rio de Janeiro,Brasil',
                     textInputAction: TextInputAction.next,
+                    onChanged: (value) {
+                      ref.read(tripSearch).file == null
+                          ? ref.read(tripSearch.notifier).state.destiny = value
+                          : ref.read(tripSearch.notifier).state.origin = value;
+                    },
                   ),
                   TextFieldCommon(
-                    hintText: 'Quantidade de pessoas',
+                    label: 'Quantidade de pessoas',
+                    hintText: '1',
                     textInputAction: TextInputAction.done,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (value) => ref
+                        .read(tripSearch.notifier)
+                        .state
+                        .quantityPeople = int.parse(value),
                     keyboardType: const TextInputType.numberWithOptions(
                         decimal: true, signed: true),
                   ),
@@ -137,11 +180,25 @@ class SearchTripTravel extends HookConsumerWidget {
                     onTap: () => Navigator.of(context)
                         .push(SelectionDate.route(isDateStart: true))
                         .then((value) {
+                      if (ref.read(tripSearch).dayEnd != null &&
+                          ref
+                              .read(tripSearch)
+                              .dayEnd!
+                              .isBefore(ref.read(tripSearch).dayStart!)) {
+                        final currentDayEnd = ref
+                            .read(tripSearch)
+                            .dayStart!
+                            .add(const Duration(days: 1));
+                        ref.read(tripSearch.notifier).state.dayEnd =
+                            currentDayEnd;
+                      }
                       dateStart.value = shouldReturnDateStart();
                       dateEnd.value = shouldReturnDateEnd();
                     }),
                     child: TextFieldCommon(
-                        enabled: false, hintText: "De ${dateStart.value}"),
+                        label: 'Data de partida',
+                        enabled: false,
+                        hintText: dateStart.value),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context)
@@ -151,7 +208,9 @@ class SearchTripTravel extends HookConsumerWidget {
                       dateEnd.value = shouldReturnDateEnd();
                     }),
                     child: TextFieldCommon(
-                        enabled: false, hintText: "Ate ${dateEnd.value}"),
+                        label: 'Data de retorno',
+                        enabled: false,
+                        hintText: dateEnd.value),
                   ),
                   const Spacer(),
                   SizedBox(
@@ -170,8 +229,52 @@ class SearchTripTravel extends HookConsumerWidget {
                                     EdgeInsetsGeometry>(
                                 EdgeInsets.symmetric(
                                     horizontal: 13, vertical: 10))),
-                        onPressed:
-                            shouldReturnTrueIfDisableButton() ? null : () {},
+                        onPressed: shouldReturnTrueIfDisableButton()
+                            ? null
+                            : () async {
+                                EasyLoading.show(status: 'Aguarde');
+                                final state = ref.read(tripSearch);
+                                var countryCurrency = "";
+                                Content? documentNeedTravel;
+
+                                final hotels = await gemini.text(
+                                    "Me traga informações como telefone, endereço, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas");
+
+                                final isInternational = await gemini.text(
+                                    "Partindo da cidade ${state.origin} ate ${state.destiny}, me retorna 1 para viagem internacional ou 0");
+                                // print(isInternational);
+
+                                if (int.parse(isInternational!
+                                        .content!.parts!.last.text!) ==
+                                    1) {
+                                  final currency = await gemini.text(
+                                      "Qual e a moeda da cidade ${state.destiny}");
+                                  final documentTravel = await gemini.text(
+                                      "Quais documentos preciso para viajar da cidade ${state.origin} ate ${state.destiny}. Exemplo visto,vacina,bagagens");
+                                  countryCurrency =
+                                      currency!.content?.parts?.last.text ?? "";
+                                  documentNeedTravel = documentTravel!.content!;
+                                }
+
+                                final whatDoCity = await gemini.text(
+                                    "Oque fazer na cidade ${state.destiny} entre os dias ${dateStart} ate ${dateEnd} ?");
+
+                                final bestRoute = await gemini.text(
+                                    "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular");
+
+                                final ResponseGemini responseGemini = (
+                                  countryCurrency: countryCurrency,
+                                  hotels: hotels!.content!,
+                                  bestRoute: bestRoute!.content!,
+                                  isInternational: false,
+                                  whatDoCity: whatDoCity!.content!,
+                                  documentNeedTravel: documentNeedTravel
+                                );
+
+                                Navigator.of(context).push(PlanTravel.route(
+                                    responseGemini: responseGemini));
+                                EasyLoading.dismiss();
+                              },
                         child: Text(
                           "Pesquisar",
                           style: TextStyle(

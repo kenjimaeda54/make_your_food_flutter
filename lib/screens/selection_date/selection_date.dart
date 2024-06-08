@@ -8,7 +8,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class SelectionDate extends HookConsumerWidget {
   final bool isDateStart;
-  SelectionDate({super.key, required this.isDateStart});
+  const SelectionDate({super.key, required this.isDateStart});
 
   static Route route({required bool isDateStart}) => RouteBottomToTopAnimated(
           widget: SelectionDate(
@@ -164,6 +164,7 @@ class SelectionDate extends HookConsumerWidget {
                     dateSelected.value = calendarTapDetails.date;
 
                     final state = ref.read(tripSearch.notifier).state;
+
                     isDateStart
                         ? state.dayStart = dateSelected.value
                         : state.dayEnd = dateSelected.value;

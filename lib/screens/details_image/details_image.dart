@@ -4,12 +4,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
+import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:image_cropper/image_cropper.dart';
 
-class DetailsImage extends HookWidget {
+class DetailsImage extends HookConsumerWidget {
   final File file;
   final String hero;
   const DetailsImage({super.key, required this.file, required this.hero});
@@ -22,7 +24,7 @@ class DetailsImage extends HookWidget {
       ));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final image = useState<File>(file);
 
     handleImageCropper() async {
@@ -103,8 +105,10 @@ class DetailsImage extends HookWidget {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => Navigator.of(context)
-                          .push(SearchTripTravel.route(file)),
+                      onTap: () {
+                        ref.read(tripSearch.notifier).state.file = file;
+                        Navigator.of(context).push(SearchTripTravel.route());
+                      },
                       child: Image.asset(
                         "assets/images/send_message.png",
                         width: 35,
