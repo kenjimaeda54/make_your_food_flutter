@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/states/trip_search.dart';
@@ -136,49 +138,74 @@ class SelectionDate extends HookConsumerWidget {
           child: SizedBox(
             width: double.infinity,
             height: double.infinity,
-            child: Center(
-              child: SizedBox(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: SfCalendar(
-                  minDate: handleMinDate(),
-                  todayHighlightColor: Colors.transparent,
-                  headerStyle: CalendarHeaderStyle(
-                    textStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  viewHeaderStyle: ViewHeaderStyle(
-                    dayTextStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  onTap: (calendarTapDetails) {
-                    if (calendarTapDetails.date != null &&
-                        calendarTapDetails.date!.isBefore(
-                            DateTime.now().subtract(const Duration(days: 1)))) {
-                      return;
-                    }
-                    dateSelected.value = calendarTapDetails.date;
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: SfCalendar(
+                      minDate: handleMinDate(),
+                      todayHighlightColor: Colors.transparent,
+                      headerStyle: CalendarHeaderStyle(
+                        textStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      viewHeaderStyle: ViewHeaderStyle(
+                        dayTextStyle: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500),
+                      ),
+                      onTap: (calendarTapDetails) {
+                        if (calendarTapDetails.date != null &&
+                            calendarTapDetails.date!.isBefore(DateTime.now()
+                                .subtract(const Duration(days: 1)))) {
+                          return;
+                        }
+                        dateSelected.value = calendarTapDetails.date;
 
-                    final state = ref.read(tripSearch.notifier).state;
+                        final state = ref.read(tripSearch.notifier).state;
 
-                    isDateStart
-                        ? state.dayStart = dateSelected.value
-                        : state.dayEnd = dateSelected.value;
-                  },
-                  viewHeaderHeight: 100,
-                  view: CalendarView.month,
-                  cellBorderColor: Colors.transparent,
-                  monthCellBuilder: (context, details) =>
-                      monthCellBuilder(details),
-                  selectionDecoration:
-                      const BoxDecoration(color: Colors.transparent),
-                ),
-              ),
-            ),
+                        isDateStart
+                            ? state.dayStart = dateSelected.value
+                            : state.dayEnd = dateSelected.value;
+                      },
+                      viewHeaderHeight: 100,
+                      view: CalendarView.month,
+                      cellBorderColor: Colors.transparent,
+                      monthCellBuilder: (context, details) =>
+                          monthCellBuilder(details),
+                      selectionDecoration:
+                          const BoxDecoration(color: Colors.transparent),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 30,
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStatePropertyAll<Color>(
+                                Theme.of(context).colorScheme.primary),
+                            padding: const MaterialStatePropertyAll<
+                                    EdgeInsetsGeometry>(
+                                EdgeInsets.symmetric(
+                                    horizontal: 13, vertical: 10))),
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          "Confirmar",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w300,
+                              color: Theme.of(context).colorScheme.onBackground,
+                              fontSize: 17),
+                        )),
+                  ),
+                ]),
           ),
         ));
   }

@@ -238,11 +238,10 @@ class SearchTripTravel extends HookConsumerWidget {
                                 Content? documentNeedTravel;
 
                                 final hotels = await gemini.text(
-                                    "Me traga informações como telefone, endereço, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas");
+                                    "Me traga informações como telefone, endereço,link para navegar na internet, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas.");
 
                                 final isInternational = await gemini.text(
                                     "Partindo da cidade ${state.origin} ate ${state.destiny}, me retorna 1 para viagem internacional ou 0");
-                                // print(isInternational);
 
                                 if (int.parse(isInternational!
                                         .content!.parts!.last.text!) ==
@@ -260,8 +259,7 @@ class SearchTripTravel extends HookConsumerWidget {
                                     "Oque fazer na cidade ${state.destiny} entre os dias ${dateStart} ate ${dateEnd} ?");
 
                                 final bestRoute = await gemini.text(
-                                    "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular");
-
+                                    "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular. Se possível me envia link com o trajeto preenchido no google maps apenas para carros particulares");
                                 final ResponseGemini responseGemini = (
                                   countryCurrency: countryCurrency,
                                   hotels: hotels!.content!,
@@ -270,7 +268,6 @@ class SearchTripTravel extends HookConsumerWidget {
                                   whatDoCity: whatDoCity!.content!,
                                   documentNeedTravel: documentNeedTravel
                                 );
-
                                 Navigator.of(context).push(PlanTravel.route(
                                     responseGemini: responseGemini));
                                 EasyLoading.dismiss();
