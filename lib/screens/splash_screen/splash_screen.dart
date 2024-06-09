@@ -33,7 +33,7 @@ class SplashScreen extends HookConsumerWidget {
       _stateMachineController.addEventListener((event) {
         if (event.name == "Finished") {
           WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-            Navigator.of(context).push(HomeScreen.route());
+            Navigator.of(context).pushNamed("/home");
           });
         }
       });

@@ -15,14 +15,13 @@ import 'package:make_your_travel/utils/typedefs.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 
 class SearchTripTravel extends HookConsumerWidget {
-  final gemini = Gemini.instance;
+  final _gemini = Gemini.instance;
 
   SearchTripTravel({super.key});
 
   static Route route([File? file]) =>
       RouteBottomToTopAnimated(widget: SearchTripTravel());
 
-//aplicar dropdown para quanitdade de pessoas
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formatDate = DateFormat("d MMMM  'de'   y, EEEE", 'pt_BR');
@@ -66,16 +65,29 @@ class SearchTripTravel extends HookConsumerWidget {
     useEffect(() {
       dateStart.value = shouldReturnDateStart();
       dateEnd.value = shouldReturnDateEnd();
-      Future.delayed(Duration.zero, () {
-        if (stateTrip.dayStart == null) {
-          ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
-        }
-        if (stateTrip.dayEnd == null) {
-          ref.read(tripSearch.notifier).state.dayEnd =
-              DateTime.now().add(const Duration(days: 1));
+      Future.delayed(Duration.zero, () async {
+        try {
+          final image = ref.read(tripSearch).file;
+          if (image != null) {
+            final destiny = await _gemini.textAndImage(
+              text: "Onde fica esta imagem, apenas a cidade,pais?",
+              images: [image.readAsBytesSync()],
+            );
+            ref.read(tripSearch.notifier).state.destiny =
+                destiny!.content!.parts?.last.text ?? "";
+          }
+          if (stateTrip.dayStart == null) {
+            ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
+          }
+          if (stateTrip.dayEnd == null) {
+            ref.read(tripSearch.notifier).state.dayEnd =
+                DateTime.now().add(const Duration(days: 1));
+          }
+        } catch (e) {
+          print(e);
         }
       });
-    }, const []);
+    }, []);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(), //limpar qualquer foco
@@ -84,7 +96,12 @@ class SearchTripTravel extends HookConsumerWidget {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () {
+              if (ref.read(tripSearch).file != null) {
+                ref.read(tripSearch.notifier).state.file = null;
+              }
+              Navigator.of(context).popUntil(ModalRoute.withName("/home"));
+            },
             child: Icon(
               Icons.arrow_back_ios_new,
               color: Theme.of(context).colorScheme.primary,
@@ -237,28 +254,28 @@ class SearchTripTravel extends HookConsumerWidget {
                                 var countryCurrency = "";
                                 Content? documentNeedTravel;
 
-                                final hotels = await gemini.text(
+                                final hotels = await _gemini.text(
                                     "Me traga informações como telefone, endereço,link para navegar na internet, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas.");
 
-                                final isInternational = await gemini.text(
+                                final isInternational = await _gemini.text(
                                     "Partindo da cidade ${state.origin} ate ${state.destiny}, me retorna 1 para viagem internacional ou 0");
 
                                 if (int.parse(isInternational!
                                         .content!.parts!.last.text!) ==
                                     1) {
-                                  final currency = await gemini.text(
+                                  final currency = await _gemini.text(
                                       "Qual e a moeda da cidade ${state.destiny}");
-                                  final documentTravel = await gemini.text(
+                                  final documentTravel = await _gemini.text(
                                       "Quais documentos preciso para viajar da cidade ${state.origin} ate ${state.destiny}. Exemplo visto,vacina,bagagens");
                                   countryCurrency =
                                       currency!.content?.parts?.last.text ?? "";
                                   documentNeedTravel = documentTravel!.content!;
                                 }
 
-                                final whatDoCity = await gemini.text(
+                                final whatDoCity = await _gemini.text(
                                     "Oque fazer na cidade ${state.destiny} entre os dias ${dateStart} ate ${dateEnd} ?");
 
-                                final bestRoute = await gemini.text(
+                                final bestRoute = await _gemini.text(
                                     "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular. Se possível me envia link com o trajeto preenchido no google maps apenas para carros particulares");
                                 final ResponseGemini responseGemini = (
                                   countryCurrency: countryCurrency,

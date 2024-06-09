@@ -106,6 +106,13 @@ class PlanTravel extends HookConsumerWidget {
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
+          title: Text(
+            "Resumo para viagem",
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700),
+          ),
           actions: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 33),

@@ -26,7 +26,6 @@ class DetailsImage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userMessage = useState("");
-    // final isLoadingGemini = useState(false);
 
     return Scaffold(
         extendBodyBehindAppBar: true,
