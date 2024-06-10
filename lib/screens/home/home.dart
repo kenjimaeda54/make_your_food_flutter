@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/details_image/details_image.dart';
@@ -10,19 +12,13 @@ import 'package:make_your_travel/screens/home/widget/card_image_suggestions.dart
 import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
 import 'package:make_your_travel/states/camera_provider.dart';
 import 'package:make_your_travel/states/images_gallery.dart';
+import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
+import 'package:make_your_travel/utils/typedef.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
-
-typedef OptionsTripPlan = ({
-  String id,
-  String title,
-  String imagePath,
-  double size
-});
-
-typedef CardImagesSuggestions = ({String title, String image});
 
 class HomeScreen extends HookConsumerWidget {
   HomeScreen({super.key});
@@ -60,14 +56,44 @@ class HomeScreen extends HookConsumerWidget {
   ];
 
   final List<CardImagesSuggestions> cardSuggestions = [
-    (image: "assets/images/deserto_sal.jpg", title: "Deserto de sal"),
-    (image: "assets/images/plaza.jpg", title: 'Plaza de Espanha'),
-    (image: "assets/images/catedral.jpg", title: "Catedral Notre Dame"),
-    (image: "assets/images/estados_unidos.jpg", title: "Estátua da Liberdade")
+    (
+      image: "assets/images/deserto_sal.jpg",
+      title: "Deserto de sal",
+      location: 'Uyuni,Bolivia'
+    ),
+    (
+      image: "assets/images/plaza.jpg",
+      title: 'Plaza de Espanha',
+      location: 'Servilha,Espanha'
+    ),
+    (
+      image: "assets/images/catedral.jpg",
+      title: "Catedral Notre Dame",
+      location: 'Paris,França'
+    ),
+    (
+      image: "assets/images/estados_unidos.jpg",
+      title: "Estátua da Liberdade",
+      location: 'Nova Iorque,Estados Unidos'
+    )
   ];
 
   static Route route() {
     return RouteBottomToTopAnimated(widget: HomeScreen());
+  }
+
+  Future<File> _getImageFileFromAssets(String path) async {
+    final pathSplit = path.split("/");
+    final byteData = await rootBundle.load(
+        path); //caminho  completo onde esta a imagem exemplo  assets/images/estados_unidos.jpg
+
+    final file = File(
+        '${(await getTemporaryDirectory()).path}/${pathSplit[2]}'); //nome do arquivo exemplo estados_unidos.jpg
+    await file.create(recursive: true);
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
   }
 
   @override
@@ -130,8 +156,28 @@ class HomeScreen extends HookConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 13),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate(
-                  (_, index) => CardIImageSuggestions(
-                      cardSuggestions: cardSuggestions[index]),
+                  (_, index) => GestureDetector(
+                        onTap: () async {
+                          try {
+                            EasyLoading.show(status: "Aguarde");
+                            final file = await _getImageFileFromAssets(
+                                cardSuggestions[index].image);
+                            ref.read(tripSearch.notifier).state.destiny =
+                                cardSuggestions[index].location;
+                            ref.read(tripSearch.notifier).state.file = file;
+                            if (context.mounted) {
+                              Navigator.of(context)
+                                  .push(SearchTripTravel.route());
+                            }
+                            EasyLoading.dismiss();
+                          } catch (e) {
+                            print(e);
+                            EasyLoading.dismiss();
+                          }
+                        },
+                        child: CardIImageSuggestions(
+                            cardSuggestions: cardSuggestions[index]),
+                      ),
                   childCount: cardSuggestions.length),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,

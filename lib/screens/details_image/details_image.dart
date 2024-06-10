@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
@@ -11,11 +13,16 @@ import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 class DetailsImage extends HookConsumerWidget {
   final File file;
   final String hero;
-  const DetailsImage({super.key, required this.file, required this.hero});
+
+  DetailsImage({super.key, required this.file, required this.hero});
+  final _gemini = Gemini.instance;
+  late AnimationController localAnimationController;
 
   static Route route({required File file, required String hero}) =>
       RouteBottomToTopAnimated(
@@ -27,12 +34,24 @@ class DetailsImage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final image = useState<File>(file);
+    final isLoading = useState(false);
 
     useEffect(() {
       Future.delayed(Duration.zero, () {
         ref.read(tripSearch.notifier).state.file = file;
       });
     }, const []);
+
+    showSnackBar() {
+      showTopSnackBar(
+          Overlay.of(context),
+          const CustomSnackBar.error(
+              message: 'Foto  ruim,tente apos cortar ou escolha outra'),
+          persistent: true,
+          onAnimationControllerInit: (value) =>
+              localAnimationController = value,
+          onTap: () => localAnimationController.reverse());
+    }
 
     handleImageCropper() async {
       try {
@@ -118,9 +137,31 @@ class DetailsImage extends HookConsumerWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(SearchTripTravel.route());
-                  },
+                  onTap: isLoading.value
+                      ? null
+                      : () {
+                          isLoading.value = true;
+                          EasyLoading.show(status: "Aguarde");
+
+                          _gemini.textAndImage(
+                            text:
+                                "Onde fica esta imagem, apenas a cidade,pais?",
+                            images: [
+                              ref.read(tripSearch).file!.readAsBytesSync()
+                            ],
+                          ).then((value) {
+                            ref.read(tripSearch.notifier).state.destiny =
+                                value!.content!.parts?.last.text ?? "";
+                            Navigator.of(context)
+                                .push(SearchTripTravel.route());
+                            EasyLoading.dismiss();
+                            isLoading.value = false;
+                          }).catchError((error) {
+                            EasyLoading.dismiss();
+                            showSnackBar();
+                            isLoading.value = false;
+                          });
+                        },
                   child: Image.asset(
                     "assets/images/send_message.png",
                     width: 35,

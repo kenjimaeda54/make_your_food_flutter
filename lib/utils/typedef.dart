@@ -13,3 +13,12 @@ typedef ResponseGemini = ({
   Content bestRoute,
   Content? documentNeedTravel
 });
+
+typedef OptionsTripPlan = ({
+  String id,
+  String title,
+  String imagePath,
+  double size,
+});
+
+typedef CardImagesSuggestions = ({String title, String image, String location});

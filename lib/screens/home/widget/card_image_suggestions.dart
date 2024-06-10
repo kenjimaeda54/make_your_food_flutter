@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:make_your_travel/screens/home/home.dart';
+import 'package:make_your_travel/utils/typedef.dart';
 
 class CardIImageSuggestions extends HookWidget {
   final CardImagesSuggestions cardSuggestions;

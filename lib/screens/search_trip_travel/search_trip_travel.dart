@@ -11,7 +11,7 @@ import 'package:make_your_travel/screens/search_trip_travel/widget/text_field_co
 import 'package:make_your_travel/screens/selection_date/selection_date.dart';
 import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
-import 'package:make_your_travel/utils/typedefs.dart';
+import 'package:make_your_travel/utils/typedef.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 
 class SearchTripTravel extends HookConsumerWidget {
@@ -28,6 +28,7 @@ class SearchTripTravel extends HookConsumerWidget {
     final stateTrip = ref.watch(tripSearch);
     final dateStart = useState<String>("");
     final dateEnd = useState<String>("");
+    final isLoading = useState<bool>(false);
 
     bool shouldReturnTrueIfDisableButton() {
       return ref.read(tripSearch).file == null
@@ -65,26 +66,13 @@ class SearchTripTravel extends HookConsumerWidget {
     useEffect(() {
       dateStart.value = shouldReturnDateStart();
       dateEnd.value = shouldReturnDateEnd();
-      Future.delayed(Duration.zero, () async {
-        try {
-          final image = ref.read(tripSearch).file;
-          if (image != null) {
-            final destiny = await _gemini.textAndImage(
-              text: "Onde fica esta imagem, apenas a cidade,pais?",
-              images: [image.readAsBytesSync()],
-            );
-            ref.read(tripSearch.notifier).state.destiny =
-                destiny!.content!.parts?.last.text ?? "";
-          }
-          if (stateTrip.dayStart == null) {
-            ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
-          }
-          if (stateTrip.dayEnd == null) {
-            ref.read(tripSearch.notifier).state.dayEnd =
-                DateTime.now().add(const Duration(days: 1));
-          }
-        } catch (e) {
-          print(e);
+      Future.delayed(Duration.zero, () {
+        if (stateTrip.dayStart == null) {
+          ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
+        }
+        if (stateTrip.dayEnd == null) {
+          ref.read(tripSearch.notifier).state.dayEnd =
+              DateTime.now().add(const Duration(days: 1));
         }
       });
     }, []);
@@ -246,9 +234,11 @@ class SearchTripTravel extends HookConsumerWidget {
                                     EdgeInsetsGeometry>(
                                 EdgeInsets.symmetric(
                                     horizontal: 13, vertical: 10))),
-                        onPressed: shouldReturnTrueIfDisableButton()
+                        onPressed: shouldReturnTrueIfDisableButton() ||
+                                isLoading.value
                             ? null
                             : () async {
+                                isLoading.value = true;
                                 EasyLoading.show(status: 'Aguarde');
                                 final state = ref.read(tripSearch);
                                 var countryCurrency = "";
@@ -288,6 +278,7 @@ class SearchTripTravel extends HookConsumerWidget {
                                 Navigator.of(context).push(PlanTravel.route(
                                     responseGemini: responseGemini));
                                 EasyLoading.dismiss();
+                                isLoading.value = false;
                               },
                         child: Text(
                           "Pesquisar",
