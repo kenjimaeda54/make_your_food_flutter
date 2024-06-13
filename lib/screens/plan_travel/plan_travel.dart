@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/utils/typedef.dart';
@@ -67,6 +68,8 @@ class PlanTravel extends HookConsumerWidget {
     final hotels = useState("");
     final bestRoute = useState('');
     final documentTravel = useState<String?>(null);
+    final formatDateTitle = DateFormat("d MMMM  'de'   y, EEEE", 'pt_BR');
+    final formatDateSubtitle = DateFormat("dd/MM/yyyy");
 
     useEffect(() {
       Future.delayed(Duration.zero, () {
@@ -95,6 +98,16 @@ class PlanTravel extends HookConsumerWidget {
           : "";
     }
 
+    String returnForecast() {
+      var temperature = "";
+      for (var it in responseGemini.temperatures) {
+        final forecast =
+            "${formatDateSubtitle.format(it.date)} \n ${it.temperatureMaximum}    ${it.temperatureMinimum} \n Chance de chover: ${it.chanceOfRain} \n\n\n";
+        temperature += forecast;
+      }
+      return temperature;
+    }
+
     return CustomScaffold(
         extendBodyBehindAppBar: true,
         resizeToAvoidBottomInset: false,
@@ -119,7 +132,7 @@ class PlanTravel extends HookConsumerWidget {
               child: InkWell(
                   onTap: () {
                     final shareContent =
-                        "Hospedagem: \n\n ${hotels.value} \n\n\n -------------  \n\n\n Oque fazer na cidade: \n\n ${whatDoCity.value} \n\n\n ------------- \n\n\n Melhor trajeto: \n\n ${bestRoute.value} \n\n\n -------------  \n\n\n ${returnContentIfInternational()}";
+                        "Hospedagem: \n\n ${hotels.value} \n\n\n -------------  \n\n\n Temperatura prevista para os próximos  7 dias a partir de ${formatDateTitle.format(ref.read(tripSearch).dayStart!)} \n\n  ${returnForecast()} \n\n\n  ----------- \n\n\n Oque fazer na cidade: \n\n ${whatDoCity.value} \n\n\n ------------- \n\n\n Melhor trajeto: \n\n ${bestRoute.value} \n\n\n -------------  \n\n\n ${returnContentIfInternational()}";
                     Share.share(shareContent,
                         subject:
                             "Viagem de ${ref.read(tripSearch).origin.split(",")[0]} para ${ref.read(tripSearch).destiny.split(",")[0]}");
@@ -146,6 +159,118 @@ class PlanTravel extends HookConsumerWidget {
                   children: [
                     _returnTitleAndSubtitle(
                         context, "Hospedagem", hotels.value),
+                    Text(
+                        "Temperatura prevista para os proximos  7 dias a partir de ${formatDateTitle.format(ref.read(tripSearch).dayStart!)}",
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 21)),
+                    ...responseGemini.temperatures.map((it) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 45),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  clipBehavior: Clip.hardEdge,
+                                  padding: EdgeInsets.zero,
+                                  decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                          alignment: Alignment.topLeft,
+                                          fit: BoxFit.fitWidth,
+                                          image: NetworkImage(
+                                            "https:${it.icon}",
+                                          ))),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      formatDateSubtitle.format(it.date),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          height: 1.4,
+                                          fontSize: 15),
+                                    ),
+                                    const SizedBox(
+                                      height: 10,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          it.temperatureMaximum,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              height: 1.4,
+                                              fontSize: 15),
+                                        ),
+                                        const SizedBox(
+                                          width: 30,
+                                        ),
+                                        Text(
+                                          it.temperatureMinimum,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w400,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
+                                              height: 1.4,
+                                              fontSize: 15),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                            Text.rich(
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  height: 1.4,
+                                  fontSize: 17),
+                              TextSpan(children: [
+                                const TextSpan(text: "Condição: "),
+                                TextSpan(text: it.condition),
+                              ]),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            Text.rich(
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  height: 1.4,
+                                  fontSize: 17),
+                              TextSpan(children: [
+                                const TextSpan(text: "Chance de chover: "),
+                                TextSpan(text: it.chanceOfRain),
+                              ]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 25),
+                      child: Divider(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.3),
+                      ),
+                    ),
                     _returnTitleAndSubtitle(
                         context,
                         "Oque fazer na cidade ${ref.read(tripSearch).destiny.split(",")[0]}",

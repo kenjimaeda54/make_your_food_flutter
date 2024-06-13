@@ -113,7 +113,7 @@ Widget _handleContainerMessages(BuildContext context, String message,
                           artboard: "Write Loading",
                           fit: BoxFit.fitWidth,
                           controllers: [OneShotAnimation("Loop")],
-                          stateMachines: ['State'],
+                          stateMachines: const ['State'],
                         ),
                       )
                     : widgetMessage();

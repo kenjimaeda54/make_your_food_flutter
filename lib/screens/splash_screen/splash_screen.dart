@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:make_your_travel/providers/images_gallery.dart';
 import 'package:make_your_travel/states/camera_provider.dart';
-import 'package:make_your_travel/states/images_gallery.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:rive/rive.dart';
 
 class SplashScreen extends HookConsumerWidget {
@@ -20,7 +17,6 @@ class SplashScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     var cameras = useState<List<CameraDescription>>([]);
-    final imagesGallery = ref.watch(imagesGalleryState);
     final cameraController = ref.watch(cameraControllerState);
 
     handleInitRive(Artboard artboard) {
@@ -38,28 +34,11 @@ class SplashScreen extends HookConsumerWidget {
       });
     }
 
-    handleProcessPhoto() async {
-      if (imagesGallery.isEmpty) {
-        final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
-            type: RequestType.image,
-            filterOption: FilterOptionGroup(
-                imageOption: const FilterOption(
-                    needTitle: false,
-                    sizeConstraint: SizeConstraint(ignoreSize: true))));
-        for (var it in paths) {
-          final countAssets = await it.assetCountAsync;
-          if (countAssets < 1) return;
-          final listAssets =
-              await it.getAssetListPaged(page: 0, size: countAssets);
-
-          for (var asset in listAssets) {
-            final imageFile = await asset.file ?? File("");
-            final StateGalleryImage stateGallery = (image: imageFile,);
-            ref.read(imagesGalleryState.notifier).state.add(stateGallery);
-          }
-        }
-      }
-    }
+    useEffect(() {
+      Future.delayed(Duration.zero, () {
+        ref.read(galleryImageNotifierProvider.notifier).fetchImagesGallery();
+      });
+    }, const []);
 
     useEffect(() {
       Future.delayed(Duration.zero, () async {
@@ -74,15 +53,6 @@ class SplashScreen extends HookConsumerWidget {
               (cameraController: _cameraController, cameras: cameras.value);
           ref.read(cameraControllerState.notifier).state =
               cameraControllerAndCamerasAvailable;
-        }
-
-        final permissionPhoto = await PhotoManager.requestPermissionExtend();
-        if (permissionPhoto.isAuth) {
-          await handleProcessPhoto();
-        }
-
-        if (permissionPhoto.hasAccess) {
-          PhotoManager.setIgnorePermissionCheck(true);
         }
       });
     }, [cameras]);

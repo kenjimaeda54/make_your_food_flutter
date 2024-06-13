@@ -12,7 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void main() async {
   timeDilation = 1.3;
   await dotenv.load(fileName: ".env");
-  final apiKey = dotenv.env[environmentApiKey];
+  final apiKey = dotenv.env[environmentApiKeyGemini];
   Gemini.init(apiKey: apiKey!);
   WidgetsFlutterBinding.ensureInitialized();
 

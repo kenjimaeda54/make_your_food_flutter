@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:make_your_travel/providers/images_gallery.dart';
 import 'package:make_your_travel/screens/details_image/details_image.dart';
 import 'package:make_your_travel/screens/home/widget/button_type_travel.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_gallery.dart';
@@ -18,6 +19,7 @@ import 'package:make_your_travel/utils/typedef.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pausable_timer/pausable_timer.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 
 class HomeScreen extends HookConsumerWidget {
@@ -99,7 +101,7 @@ class HomeScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final idSelected = useState(optionsTripPlan[0].id);
-    final imageGallery = ref.watch(imagesGalleryState);
+    final imageGalleryProvider = ref.watch(galleryImageNotifierProvider);
     final cameraControllerAndCameraAvailable = ref.watch(cameraControllerState);
     final SliverObserverController sliverObserver =
         SliverObserverController(controller: _scrollCustomController);
@@ -110,12 +112,19 @@ class HomeScreen extends HookConsumerWidget {
     final isTurnOnFlash = useState(false);
     final isBackCameraDescription = useState(true);
 
+    handleNotifierAssets(MethodCall call) {
+      ref.read(galleryImageNotifierProvider.notifier).fetchImagesGallery();
+    }
+
     useEffect(() {
       //entendendo observer scroll
       //https://github.com/fluttercandies/flutter_scrollview_observer/wiki/2%E3%80%81Scrolling-to-the-specified-index-location
       //https://medium.com/@linxunfeng/flutter-scrolling-to-a-specific-item-in-the-scrollview-b89d3f10eee0
       WidgetsBinding.instance.addPostFrameCallback(
         (timeStamp) {
+          PhotoManager.addChangeCallback(handleNotifierAssets);
+          PhotoManager.startChangeNotify();
+
           _scrollCustomController.position.isScrollingNotifier.addListener(() {
             //para saber se esta no inicio da lista https://stackoverflow.com/questions/46377779/how-to-check-if-scroll-position-is-at-top-or-bottom-in-listview
             if (_scrollCustomController.position.pixels < 50) {
@@ -131,8 +140,12 @@ class HomeScreen extends HookConsumerWidget {
           });
         },
       );
+
       return () {
         timer.cancel();
+
+        PhotoManager.removeChangeCallback(handleNotifierAssets);
+        PhotoManager.stopChangeNotify();
       };
     }, []);
 
@@ -334,18 +347,20 @@ class HomeScreen extends HookConsumerWidget {
                   return ClipRRect(
                       borderRadius:
                           const BorderRadius.only(topLeft: Radius.circular(10)),
-                      child: returnCardImage(imageGallery[index].image!));
+                      child:
+                          returnCardImage(imageGalleryProvider[index].image!));
                 }
 
                 if (index == 2) {
                   return ClipRRect(
                       borderRadius: const BorderRadius.only(
                           topRight: Radius.circular(10)),
-                      child: returnCardImage(imageGallery[index].image!));
+                      child:
+                          returnCardImage(imageGalleryProvider[index].image!));
                 }
 
-                return returnCardImage(imageGallery[index].image!);
-              }, childCount: imageGallery.length),
+                return returnCardImage(imageGalleryProvider[index].image!);
+              }, childCount: imageGalleryProvider.length),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
               ),

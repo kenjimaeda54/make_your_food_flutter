@@ -1,5 +1,14 @@
 import 'package:flutter_gemini/flutter_gemini.dart';
 
+typedef TemperatureOnTravel = ({
+  String temperatureMinimum,
+  String temperatureMaximum,
+  DateTime date,
+  String icon,
+  String chanceOfRain,
+  String condition,
+});
+
 typedef HotelsLatitudeAndLongitude = ({
   double latitude,
   double longitude,
@@ -11,7 +20,8 @@ typedef ResponseGemini = ({
   bool isInternational,
   Content whatDoCity,
   Content bestRoute,
-  Content? documentNeedTravel
+  Content? documentNeedTravel,
+  List<TemperatureOnTravel> temperatures,
 });
 
 typedef OptionsTripPlan = ({

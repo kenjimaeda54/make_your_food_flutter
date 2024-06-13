@@ -6,6 +6,9 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:make_your_travel/client/forecast_weather.dart';
+import 'package:make_your_travel/data/data_or_expection.dart';
+import 'package:make_your_travel/models/weather/weather_model.dart';
 import 'package:make_your_travel/screens/plan_travel/plan_travel.dart';
 import 'package:make_your_travel/screens/search_trip_travel/widget/text_field_common.dart';
 import 'package:make_your_travel/screens/selection_date/selection_date.dart';
@@ -29,6 +32,55 @@ class SearchTripTravel extends HookConsumerWidget {
     final dateStart = useState<String>("");
     final dateEnd = useState<String>("");
     final isLoading = useState<bool>(false);
+
+    Future<List<DataOrException<ForecastWeather>>>
+        handleListFuturesWeather() async {
+      final state = ref.read(tripSearch);
+      final formatDateApi = DateFormat("yyyy-MM-dd");
+      var temporalDay = 1;
+      final listSixDay =
+          List.generate(6, (index) => index * index, growable: false);
+      final listDate = listSixDay.map((e) {
+        final date = state.dayStart!.add(Duration(days: temporalDay));
+        temporalDay += 1;
+        return date;
+      }).toList();
+
+      final serviceFutureWeather = ForecastWeatherService();
+      //https://stackoverflow.com/questions/55502528/flutter-multiple-async-methods-for-parrallel-execution
+      final dateApiWhenStartTravel = formatDateApi.format(state.dayStart!);
+
+      if (state.dayStart!.isAtSameMomentAs(DateTime.now())) {
+        await Future.wait([
+          serviceFutureWeather.fetchForecastWeather(
+              city: state.destiny, date: dateApiWhenStartTravel),
+          ...listDate.map((it) => serviceFutureWeather.fetchForecastWeather(
+              city: state.destiny, date: formatDateApi.format(it)))
+        ]);
+      }
+
+      if (DateTime.now().difference(state.dayStart!).inDays < 14) {
+        return await Future.wait([
+          serviceFutureWeather.fetchForecastWeather(
+              city: state.destiny, date: dateApiWhenStartTravel),
+          ...listDate.map((it) {
+            if (DateTime.now().difference(state.dayStart!).inDays < 14) {
+              return serviceFutureWeather.fetchForecastWeather(
+                  city: state.destiny, date: formatDateApi.format(it));
+            }
+            return serviceFutureWeather.fetchFutureForecastWeather(
+                city: state.destiny, date: formatDateApi.format(it));
+          })
+        ]);
+      }
+
+      return Future.wait([
+        serviceFutureWeather.fetchFutureForecastWeather(
+            city: state.destiny, date: dateApiWhenStartTravel),
+        ...listDate.map((it) => serviceFutureWeather.fetchFutureForecastWeather(
+            city: state.destiny, date: formatDateApi.format(it)))
+      ]);
+    }
 
     bool shouldReturnTrueIfDisableButton() {
       return ref.read(tripSearch).file == null
@@ -244,41 +296,78 @@ class SearchTripTravel extends HookConsumerWidget {
                                 var countryCurrency = "";
                                 Content? documentNeedTravel;
 
-                                final hotels = await _gemini.text(
-                                    "Me traga informações como telefone, endereço,link para navegar na internet, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas.");
+                                final fetchTemperatureState =
+                                    await handleListFuturesWeather();
+                                final lengthsErros = fetchTemperatureState
+                                    .where((element) => element.data == null);
 
-                                final isInternational = await _gemini.text(
-                                    "Partindo da cidade ${state.origin} ate ${state.destiny}, me retorna 1 para viagem internacional ou 0");
+                                if (lengthsErros.isEmpty) {
+                                  final List<TemperatureOnTravel>
+                                      temperaturesTravel =
+                                      fetchTemperatureState.map((e) {
+                                    final dateConverted = DateTime.parse(e
+                                        .data!.forecast.forecastDay.first.date);
 
-                                if (int.parse(isInternational!
-                                        .content!.parts!.last.text!) ==
-                                    1) {
-                                  final currency = await _gemini.text(
-                                      "Qual e a moeda da cidade ${state.destiny}");
-                                  final documentTravel = await _gemini.text(
-                                      "Quais documentos preciso para viajar da cidade ${state.origin} ate ${state.destiny}. Exemplo visto,vacina,bagagens");
-                                  countryCurrency =
-                                      currency!.content?.parts?.last.text ?? "";
-                                  documentNeedTravel = documentTravel!.content!;
+                                    final TemperatureOnTravel temperature = (
+                                      date: dateConverted,
+                                      temperatureMaximum:
+                                          "${e.data!.forecast.forecastDay.first.day.maxTemperature} ºC",
+                                      temperatureMinimum:
+                                          "${e.data!.forecast.forecastDay.first.day.minTemperature} ºC",
+                                      icon: e.data!.forecast.forecastDay.first
+                                          .day.condition.icon,
+                                      chanceOfRain:
+                                          "${e.data!.forecast.forecastDay.first.hour.first.chanceOfRain} %",
+                                      condition: e.data!.forecast.forecastDay
+                                          .first.day.condition.text
+                                    );
+                                    return temperature;
+                                  }).toList();
+
+                                  final hotels = await _gemini.text(
+                                      "Me traga informações como telefone, endereço,link para navegar na internet, valores de  lugares para hospedar em ${state.destiny} do dia ${dateStart} ate ${dateEnd} para ${state.quantityPeople} pessoas.");
+
+                                  final isInternational = await _gemini.text(
+                                      "Partindo da cidade ${state.origin} ate ${state.destiny}, me retorna 1 para viagem internacional ou 0");
+
+                                  if (int.parse(isInternational!
+                                          .content!.parts!.last.text!) ==
+                                      1) {
+                                    final currency = await _gemini.text(
+                                        "Qual e a moeda da cidade ${state.destiny}");
+                                    final documentTravel = await _gemini.text(
+                                        "Quais documentos preciso para viajar da cidade ${state.origin} ate ${state.destiny}. Exemplo visto,vacina,bagagens");
+                                    countryCurrency =
+                                        currency!.content?.parts?.last.text ??
+                                            "";
+                                    documentNeedTravel =
+                                        documentTravel!.content!;
+                                  }
+
+                                  final whatDoCity = await _gemini.text(
+                                      "Oque fazer na cidade ${state.destiny} entre os dias ${dateStart} ate ${dateEnd} ?");
+
+                                  final bestRoute = await _gemini.text(
+                                      "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular. Se possível me envia link com o trajeto preenchido no google maps apenas para carros particulares");
+                                  final ResponseGemini responseGemini = (
+                                    countryCurrency: countryCurrency,
+                                    hotels: hotels!.content!,
+                                    bestRoute: bestRoute!.content!,
+                                    isInternational: false,
+                                    whatDoCity: whatDoCity!.content!,
+                                    documentNeedTravel: documentNeedTravel,
+                                    temperatures: [...temperaturesTravel]
+                                  );
+                                  Navigator.of(context).push(PlanTravel.route(
+                                      responseGemini: responseGemini));
+                                  EasyLoading.dismiss();
+                                  isLoading.value = false;
+                                  return;
                                 }
-
-                                final whatDoCity = await _gemini.text(
-                                    "Oque fazer na cidade ${state.destiny} entre os dias ${dateStart} ate ${dateEnd} ?");
-
-                                final bestRoute = await _gemini.text(
-                                    "Me traga informações completa saindo da cidade ${state.origin} ate ${state.destiny}, quero saber possíveis linhas de ônibus,avião ou carro particular. Se possível me envia link com o trajeto preenchido no google maps apenas para carros particulares");
-                                final ResponseGemini responseGemini = (
-                                  countryCurrency: countryCurrency,
-                                  hotels: hotels!.content!,
-                                  bestRoute: bestRoute!.content!,
-                                  isInternational: false,
-                                  whatDoCity: whatDoCity!.content!,
-                                  documentNeedTravel: documentNeedTravel
-                                );
-                                Navigator.of(context).push(PlanTravel.route(
-                                    responseGemini: responseGemini));
-                                EasyLoading.dismiss();
-                                isLoading.value = false;
+                                if (lengthsErros.isNotEmpty) {
+                                  EasyLoading.dismiss();
+                                  isLoading.value = false;
+                                }
                               },
                         child: Text(
                           "Pesquisar",
