@@ -64,7 +64,7 @@ class SearchTripTravel extends HookConsumerWidget {
           serviceFutureWeather.fetchForecastWeather(
               city: state.destiny, date: dateApiWhenStartTravel),
           ...listDate.map((it) {
-            if (DateTime.now().difference(state.dayStart!).inDays < 14) {
+            if (it.difference(DateTime.now()).inDays < 14) {
               return serviceFutureWeather.fetchForecastWeather(
                   city: state.destiny, date: formatDateApi.format(it));
             }

@@ -160,7 +160,7 @@ class PlanTravel extends HookConsumerWidget {
                     _returnTitleAndSubtitle(
                         context, "Hospedagem", hotels.value),
                     Text(
-                        "Temperatura prevista para os proximos  7 dias a partir de ${formatDateTitle.format(ref.read(tripSearch).dayStart!)}",
+                        "Temperatura prevista para os próximos  7 dias a partir de ${formatDateTitle.format(ref.read(tripSearch).dayStart!)}",
                         style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: Theme.of(context).colorScheme.primary,
