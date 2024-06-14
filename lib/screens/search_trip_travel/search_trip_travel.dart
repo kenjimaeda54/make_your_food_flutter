@@ -94,6 +94,7 @@ class SearchTripTravel extends HookConsumerWidget {
           : dateStart.value.isEmpty ||
               dateEnd.value.isEmpty ||
               stateTrip.destiny.isEmpty ||
+              stateTrip.origin.isEmpty ||
               stateTrip.quantityPeople == 0 ||
               stateTrip.dayEnd == null ||
               stateTrip.dayStart == null;
@@ -140,6 +141,12 @@ class SearchTripTravel extends HookConsumerWidget {
               if (ref.read(tripSearch).file != null) {
                 ref.read(tripSearch.notifier).state.file = null;
               }
+              ref.read(tripSearch.notifier).state.origin = "";
+              ref.read(tripSearch.notifier).state.destiny = "";
+              ref.read(tripSearch.notifier).state.dayStart = DateTime.now();
+              ref.read(tripSearch.notifier).state.dayEnd =
+                  DateTime.now().add(const Duration(days: 1));
+              ref.read(tripSearch.notifier).state.quantityPeople = 0;
               Navigator.of(context).popUntil(ModalRoute.withName("/home"));
             },
             child: Icon(

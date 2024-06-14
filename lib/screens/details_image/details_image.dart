@@ -145,7 +145,7 @@ class DetailsImage extends HookConsumerWidget {
 
                           _gemini.textAndImage(
                             text:
-                                "Onde fica esta imagem, apenas a cidade,pais?",
+                                "Qual e o pais e a cidade  nesta imagem,por favor retorne nesse formato:  cidade,pais ?",
                             images: [
                               ref.read(tripSearch).file!.readAsBytesSync()
                             ],

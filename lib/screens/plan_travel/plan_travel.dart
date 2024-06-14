@@ -167,7 +167,7 @@ class PlanTravel extends HookConsumerWidget {
                             fontSize: 21)),
                     ...responseGemini.temperatures.map((it) {
                       return Padding(
-                        padding: EdgeInsets.only(bottom: 45),
+                        padding: const EdgeInsets.only(bottom: 45),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
