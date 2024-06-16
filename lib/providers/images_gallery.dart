@@ -18,6 +18,10 @@ class GalleryImageNotifier extends StateNotifier<List<GalleryImageState>> {
       PhotoManager.setIgnorePermissionCheck(true);
     }
 
+    if (!photoManager.isAuth) {
+      state = [];
+    }
+
     if (photoManager.isAuth) {
       final assets = await PhotoManager.getAssetPathList(
           type: RequestType.image,

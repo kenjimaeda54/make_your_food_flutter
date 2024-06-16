@@ -11,12 +11,14 @@ import 'package:make_your_travel/screens/home/widget/button_type_travel.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_gallery.dart';
 import 'package:make_your_travel/screens/home/widget/card_image_suggestions.dart';
 import 'package:make_your_travel/screens/search_trip_travel/search_trip_travel.dart';
+import 'package:make_your_travel/screens/splash_screen/splash_screen.dart';
 import 'package:make_your_travel/states/camera_provider.dart';
 import 'package:make_your_travel/states/images_gallery.dart';
 import 'package:make_your_travel/states/trip_search.dart';
 import 'package:make_your_travel/utils/route_bottom_to_top_animated.dart';
 import 'package:make_your_travel/utils/typedef.dart';
 import 'package:make_your_travel/widget/custom_scaffold/custom_scaffold.dart';
+import 'package:open_settings_plus/core/open_settings_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pausable_timer/pausable_timer.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -203,168 +205,214 @@ class HomeScreen extends HookConsumerWidget {
         case "fosnof234":
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-            sliver: SliverToBoxAdapter(
-              child: cameraControllerAndCameraAvailable != null
-                  ? Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: CameraPreview(
-                              cameraControllerAndCameraAvailable
-                                  .cameraController),
-                        ),
-                        Positioned.fill(
-                          bottom: 0,
-                          top: MediaQuery.of(context).size.height * 0.62,
-                          child: Hero(
-                            tag: cameraControllerAndCameraAvailable
-                                .cameraController.cameraId
-                                .toString(),
-                            child: Container(
-                              width: double.infinity,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 13),
-                              decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onBackground,
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      isTurnOnFlash.value =
-                                          !isTurnOnFlash.value;
+            sliver: cameraControllerAndCameraAvailable != null
+                ? SliverToBoxAdapter(
+                    child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: CameraPreview(cameraControllerAndCameraAvailable
+                            .cameraController),
+                      ),
+                      Positioned.fill(
+                        bottom: 0,
+                        top: MediaQuery.of(context).size.height * 0.62,
+                        child: Hero(
+                          tag: cameraControllerAndCameraAvailable
+                              .cameraController.cameraId
+                              .toString(),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 13),
+                            decoration: BoxDecoration(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    isTurnOnFlash.value = !isTurnOnFlash.value;
 
-                                      isTurnOnFlash.value
-                                          ? cameraControllerAndCameraAvailable
+                                    isTurnOnFlash.value
+                                        ? cameraControllerAndCameraAvailable
+                                            .cameraController
+                                            .setFlashMode(FlashMode.always)
+                                        : cameraControllerAndCameraAvailable
+                                            .cameraController
+                                            .setFlashMode(FlashMode.off);
+                                  },
+                                  child: isTurnOnFlash.value
+                                      ? Image.asset(
+                                          "assets/images/flash_off.png",
+                                          width: 20,
+                                          height: 20,
+                                          filterQuality: FilterQuality.high,
+                                        )
+                                      : Image.asset(
+                                          "assets/images/flash_on.png",
+                                          width: 20,
+                                          height: 20,
+                                          filterQuality: FilterQuality.high,
+                                        ),
+                                ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      final picture =
+                                          await cameraControllerAndCameraAvailable
                                               .cameraController
-                                              .setFlashMode(FlashMode.always)
-                                          : cameraControllerAndCameraAvailable
-                                              .cameraController
-                                              .setFlashMode(FlashMode.off);
-                                    },
-                                    child: isTurnOnFlash.value
-                                        ? Image.asset(
-                                            "assets/images/flash_off.png",
-                                            width: 20,
-                                            height: 20,
-                                            filterQuality: FilterQuality.high,
-                                          )
-                                        : Image.asset(
-                                            "assets/images/flash_on.png",
-                                            width: 20,
-                                            height: 20,
-                                            filterQuality: FilterQuality.high,
-                                          ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      try {
-                                        final picture =
-                                            await cameraControllerAndCameraAvailable
-                                                .cameraController
-                                                .takePicture();
-                                        final file = File(picture.path);
-                                        if (context.mounted) {
-                                          Navigator.of(context).push(
-                                              DetailsImage.route(
-                                                  file: file,
-                                                  hero:
-                                                      cameraControllerAndCameraAvailable
-                                                          .cameraController
-                                                          .cameraId
-                                                          .toString()));
-                                        }
-                                      } catch (e) {
-                                        print(e);
+                                              .takePicture();
+                                      final file = File(picture.path);
+                                      if (context.mounted) {
+                                        Navigator.of(context).push(
+                                            DetailsImage.route(
+                                                file: file,
+                                                hero:
+                                                    cameraControllerAndCameraAvailable
+                                                        .cameraController
+                                                        .cameraId
+                                                        .toString()));
                                       }
-                                    },
-                                    child: Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary),
-                                    ),
+                                    } catch (e) {
+                                      print(e);
+                                    }
+                                  },
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
                                   ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      isBackCameraDescription.value =
-                                          !isBackCameraDescription.value;
-                                      final frontCamera =
-                                          cameraControllerAndCameraAvailable
-                                              .cameras
-                                              .firstWhere((description) =>
-                                                  description.lensDirection ==
-                                                  CameraLensDirection.front);
-                                      final backCamera =
-                                          cameraControllerAndCameraAvailable
-                                              .cameras
-                                              .firstWhere((description) =>
-                                                  description.lensDirection ==
-                                                  CameraLensDirection.back);
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    isBackCameraDescription.value =
+                                        !isBackCameraDescription.value;
+                                    final frontCamera =
+                                        cameraControllerAndCameraAvailable
+                                            .cameras
+                                            .firstWhere((description) =>
+                                                description.lensDirection ==
+                                                CameraLensDirection.front);
+                                    final backCamera =
+                                        cameraControllerAndCameraAvailable
+                                            .cameras
+                                            .firstWhere((description) =>
+                                                description.lensDirection ==
+                                                CameraLensDirection.back);
 
-                                      isBackCameraDescription.value
-                                          ? cameraControllerAndCameraAvailable
-                                              .cameraController
-                                              .setDescription(backCamera)
-                                          : cameraControllerAndCameraAvailable
-                                              .cameraController
-                                              .setDescription(frontCamera);
-                                    },
-                                    child: Image.asset(
-                                      "assets/images/turn.png",
-                                      width: 20,
-                                      height: 20,
-                                      filterQuality: FilterQuality.high,
-                                    ),
+                                    isBackCameraDescription.value
+                                        ? cameraControllerAndCameraAvailable
+                                            .cameraController
+                                            .setDescription(backCamera)
+                                        : cameraControllerAndCameraAvailable
+                                            .cameraController
+                                            .setDescription(frontCamera);
+                                  },
+                                  child: Image.asset(
+                                    "assets/images/turn.png",
+                                    width: 20,
+                                    height: 20,
+                                    filterQuality: FilterQuality.high,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    )
-                  : Container(),
-            ),
+                      ),
+                    ],
+                  ))
+                : SliverPadding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).size.height * 0.35),
+                    sliver: SliverToBoxAdapter(
+                      child: TextButton(
+                          onPressed: () {
+                            switch (OpenSettingsPlus.shared) {
+                              case OpenSettingsPlusAndroid settings:
+                                settings.appSettings();
+                              case OpenSettingsPlusIOS settings:
+                                settings.appSettings();
+                            }
+                            Future.delayed(const Duration(seconds: 2), () {
+                              Navigator.of(context).push(SplashScreen.route());
+                            });
+                          },
+                          child: Text(
+                            "Sem permissão  para acessar a camera, clica aqui para abrir configurações",
+                            style: TextStyle(
+                                fontSize: 17,
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w300),
+                          )),
+                    ),
+                  ),
           );
 
         case 'fosno343':
           return SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 13),
-            sliver: SliverGrid(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                _contextSliverGrid ??= context;
+            sliver: imageGalleryProvider.isEmpty
+                ? SliverPadding(
+                    padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).size.height * 0.35),
+                    sliver: SliverToBoxAdapter(
+                      child: TextButton(
+                          onPressed: () {
+                            switch (OpenSettingsPlus.shared) {
+                              case OpenSettingsPlusAndroid settings:
+                                settings.appSettings();
+                              case OpenSettingsPlusIOS settings:
+                                settings.appSettings();
+                            }
+                            Future.delayed(const Duration(seconds: 2), () {
+                              Navigator.of(context).push(SplashScreen.route());
+                            });
+                          },
+                          child: Text(
+                            "Sem permissão  para acessar a galeria de fotos, clica aqui para abrir configurações",
+                            style: TextStyle(
+                                fontSize: 17,
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w300),
+                          )),
+                    ),
+                  )
+                : SliverGrid(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      _contextSliverGrid ??= context;
 
-                if (index == 0) {
-                  return ClipRRect(
-                      borderRadius:
-                          const BorderRadius.only(topLeft: Radius.circular(10)),
-                      child:
-                          returnCardImage(imageGalleryProvider[index].image!));
-                }
+                      if (index == 0) {
+                        return ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10)),
+                            child: returnCardImage(
+                                imageGalleryProvider[index].image!));
+                      }
 
-                if (index == 2) {
-                  return ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(10)),
-                      child:
-                          returnCardImage(imageGalleryProvider[index].image!));
-                }
+                      if (index == 2) {
+                        return ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(10)),
+                            child: returnCardImage(
+                                imageGalleryProvider[index].image!));
+                      }
 
-                return returnCardImage(imageGalleryProvider[index].image!);
-              }, childCount: imageGalleryProvider.length),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-              ),
-            ),
+                      return returnCardImage(
+                          imageGalleryProvider[index].image!);
+                    }, childCount: imageGalleryProvider.length),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                    ),
+                  ),
           );
 
         default:
