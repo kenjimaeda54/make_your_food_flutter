@@ -49,7 +49,6 @@ class TextFieldCommon extends HookWidget {
             onChanged: onChanged,
             onSubmitted: onSubmitted,
             cursorColor: Theme.of(context).colorScheme.primary,
-            cursorHeight: 15,
             maxLength: 27,
             keyboardType: keyboardType,
             style: TextStyle(

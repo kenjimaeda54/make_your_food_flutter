@@ -337,7 +337,9 @@ class HomeScreen extends HookConsumerWidget {
                           onPressed: () {
                             switch (OpenSettingsPlus.shared) {
                               case OpenSettingsPlusAndroid settings:
-                                settings.appSettings();
+                                settings.sendCustomMessage(
+                                  'android.settings.APPLICATION_DETAILS_SETTINGS',
+                                );
                               case OpenSettingsPlusIOS settings:
                                 settings.appSettings();
                             }
